@@ -1409,6 +1409,7 @@
     </a>
     <nav class="nav-links">
       <button id="nav-landing" class="nav-btn active" onclick="showLandingScreen()">Overview</button>
+      <button id="nav-dashboard" class="nav-btn" onclick="showDashboardScreen()">Executive Dashboard</button>
       <button id="nav-selection" class="nav-btn" onclick="showSelectionScreen()">Candidate Hub</button>
       <button id="nav-interview" class="nav-btn" disabled onclick="showInterviewScreen()">Interview Workspace</button>
       <button id="nav-report" class="nav-btn" disabled onclick="showFeedbackScreen()">Assessment Report</button>
@@ -1434,9 +1435,13 @@
           Role-calibrated, real-time technical assessments powered by dynamic question framing, in-flight educational concept remediation, and automated executive competency auditing.
         </p>
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, var(--primary), #8b5cf6); border: none; padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; box-shadow: 0 0 25px var(--primary-glow); transition: transform 0.2s;" onclick="showSelectionScreen()">
+          <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, var(--primary), #8b5cf6); border: none; padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; box-shadow: 0 0 25px var(--primary-glow); transition: transform 0.2s;" onclick="showDashboardScreen()">
+            <svg style="width: 1.2rem; height: 1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Open Executive Dashboard
+          </button>
+          <button class="btn btn-secondary btn-lg" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; transition: all 0.2s;" onclick="showSelectionScreen()">
             <svg style="width: 1.2rem; height: 1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            Access Candidate Assessment Hub
+            Candidate Assessment Hub
           </button>
         </div>
       </div>
@@ -1473,6 +1478,114 @@
           </div>
           <h3 style="font-family: var(--font-display); font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">Executive Audit & PDF Export</h3>
           <p style="color: var(--text-muted); font-size: 0.88rem; line-height: 1.5;">Generates structured competency metrics, missed concept logs, and physical print/PDF report outputs.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Screen 0.5: Executive Dashboard -->
+    <div id="dashboard-screen" class="screen">
+      <div class="hero-banner" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h1>Executive Assessment Analytics</h1>
+            <p class="hero-tagline" style="color: var(--primary); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.25rem; font-family: var(--font-display);">Cohort Level Intelligence & Telemetry</p>
+            <p>Real-time technical metrics, score distributions, and recent candidate assessment evaluations.</p>
+          </div>
+          <button class="btn btn-primary" onclick="showSelectionScreen()" style="padding: 0.75rem 1.5rem; font-weight: 700; border-radius: 8px; cursor: pointer;">
+            Launch New Candidate Assessment
+          </button>
+        </div>
+      </div>
+
+      <!-- Cohort Summary Stats -->
+      <div class="dashboard-stats" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg style="width: 1.25rem; height: 1.25rem; color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-number">24</span>
+            <span class="stat-label">Active Candidates</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg style="width: 1.25rem; height: 1.25rem; color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-number">84%</span>
+            <span class="stat-label">Cohort Pass Rate</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg style="width: 1.25rem; height: 1.25rem; color: var(--warning);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-number">82 / 100</span>
+            <span class="stat-label">Avg Technical Depth Score</span>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrapper">
+            <svg style="width: 1.25rem; height: 1.25rem; color: #8b5cf6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          </div>
+          <div class="stat-info">
+            <span class="stat-number">96%</span>
+            <span class="stat-label">Remediation Accuracy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Assessments Log Table -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem; margin-bottom: 2rem;">
+        <h3 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          <svg style="width: 1.25rem; height: 1.25rem; color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+          <span>Recent Candidate Assessment History</span>
+        </h3>
+        
+        <div style="overflow-x: auto;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                <th style="padding: 0.75rem 1rem;">Candidate Name</th>
+                <th style="padding: 0.75rem 1rem;">Target Role</th>
+                <th style="padding: 0.75rem 1rem;">Experience</th>
+                <th style="padding: 0.75rem 1rem;">Overall Score</th>
+                <th style="padding: 0.75rem 1rem;">Hiring Recommendation</th>
+                <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <td style="padding: 1rem; font-weight: 600; color: #fff;">Aarav Sharma</td>
+                <td style="padding: 1rem; color: var(--text-muted);">AI / ML Engineer</td>
+                <td style="padding: 1rem; color: var(--text-muted);">4.5 Years</td>
+                <td style="padding: 1rem; font-weight: 700; color: var(--success);">85 / 100</td>
+                <td style="padding: 1rem;"><span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">RECOMMENDED</span></td>
+                <td style="padding: 1rem; text-align: right;"><button onclick="showSelectionScreen()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer;">View Profile</button></td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <td style="padding: 1rem; font-weight: 600; color: #fff;">Diya Patel</td>
+                <td style="padding: 1rem; color: var(--text-muted);">Senior Data Architect</td>
+                <td style="padding: 1rem; color: var(--text-muted);">8.0 Years</td>
+                <td style="padding: 1rem; font-weight: 700; color: var(--success);">92 / 100</td>
+                <td style="padding: 1rem;"><span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">RECOMMENDED</span></td>
+                <td style="padding: 1rem; text-align: right;"><button onclick="showSelectionScreen()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer;">View Profile</button></td>
+              </tr>
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <td style="padding: 1rem; font-weight: 600; color: #fff;">Rohan Mehta</td>
+                <td style="padding: 1rem; color: var(--text-muted);">DevOps & MLOps Engineer</td>
+                <td style="padding: 1rem; color: var(--text-muted);">3.0 Years</td>
+                <td style="padding: 1rem; font-weight: 700; color: var(--warning);">68 / 100</td>
+                <td style="padding: 1rem;"><span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--warning); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">MAYBE RECOMMENDED</span></td>
+                <td style="padding: 1rem; text-align: right;"><button onclick="showSelectionScreen()" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer;">View Profile</button></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -2338,8 +2451,38 @@
       }
     }
 
+    function renderConceptRemediationCard(explanation) {
+      const stream = document.getElementById('chat-stream');
+      if (!stream) return;
+      const card = document.createElement('div');
+      card.className = 'remediation-callout-box';
+      card.style.cssText = `
+        background: rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        border-left: 4px solid var(--warning);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin: 0.75rem 0;
+        max-width: 85%;
+        align-self: flex-start;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08);
+      `;
+      card.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--warning); font-weight: 700; font-family: var(--font-display); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem;">
+          <svg style="width: 1.1rem; height: 1.1rem; flex-shrink: 0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          <span>In-Flight Concept Remediation</span>
+        </div>
+        <div style="color: #e2e8f0; font-size: 0.9rem; line-height: 1.5;">
+          ${explanation}
+        </div>
+      `;
+      stream.appendChild(card);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
     function navigateScreen(screenName) {
       document.getElementById('landing-screen')?.classList.remove('active');
+      document.getElementById('dashboard-screen')?.classList.remove('active');
       document.getElementById('selection-screen')?.classList.remove('active');
       document.getElementById('verification-screen')?.classList.remove('active');
       document.getElementById('interview-screen')?.classList.remove('active');
@@ -2353,11 +2496,13 @@
 
       const cleanName = screenName.replace('-screen', '');
       const navLanding = document.getElementById('nav-landing');
+      const navDashboard = document.getElementById('nav-dashboard');
       const navSelection = document.getElementById('nav-selection');
       const navInterview = document.getElementById('nav-interview');
       const navReport = document.getElementById('nav-report');
 
       if (navLanding) navLanding.classList.toggle('active', cleanName === 'landing');
+      if (navDashboard) navDashboard.classList.toggle('active', cleanName === 'dashboard');
       if (navSelection) navSelection.classList.toggle('active', cleanName === 'selection');
       if (navInterview) navInterview.classList.toggle('active', cleanName === 'interview');
       if (navReport) navReport.classList.toggle('active', cleanName === 'feedback' || cleanName === 'report');
@@ -2370,6 +2515,10 @@
 
     function showLandingScreen() {
       pushNavigation('landing');
+    }
+
+    function showDashboardScreen() {
+      pushNavigation('dashboard');
     }
 
     function showSelectionScreen() {

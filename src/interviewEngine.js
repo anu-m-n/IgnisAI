@@ -245,11 +245,11 @@ export async function handleTurn(session, candidateMessage) {
 }
 
 export async function forceConcludeInterview(session) {
-  const { candidate, plan, transcript, evaluations } = session;
+  const { candidate, plan, transcript, evaluations, missedConcepts = [] } = session;
 
   const stats = calculateSessionStats({ ...session, done: true });
 
-  const feedbackPrompt = feedbackSystemPrompt({ candidate, plan, transcript, stats });
+  const feedbackPrompt = feedbackSystemPrompt({ candidate, plan, transcript, stats, missedConcepts });
   const feedbackRaw = await callLLM({
     systemPrompt: feedbackPrompt,
     messages: [{ role: "user", content: "Write the final feedback JSON now." }],
@@ -257,13 +257,17 @@ export async function forceConcludeInterview(session) {
   });
   const feedback = parseJsonLoose(feedbackRaw);
 
+  if (!feedback.missedConcepts || feedback.missedConcepts.length === 0) {
+    feedback.missedConcepts = missedConcepts;
+  }
+
   const finalStats = calculateSessionStats({ ...session, done: true, evaluations });
   if (feedback.consistencyScore) {
     finalStats.consistencyScore = feedback.consistencyScore;
   }
 
   return {
-    state: { ...session, done: true, feedback, stats: finalStats, evaluations },
+    state: { ...session, done: true, feedback, stats: finalStats, evaluations, missedConcepts },
     reply: "Interview concluded early by candidate request.",
     done: true,
     feedback,

@@ -196,9 +196,14 @@ function mockLLMResponse({ systemPrompt, messages }) {
       }
     }
 
+    // Extract candidate job role if present
+    const roleMatch = systemPrompt.match(/Applied Position:\s*([^\n]+)/i) || systemPrompt.match(/Candidate's applied position:\s*([^\n]+)/i);
+    const candidateRole = roleMatch ? roleMatch[1].trim() : "Software Engineer";
+
     // Check features of answer
     const isBoilerplate = lastCandidateAnswer.toLowerCase().includes("i'd approach it by breaking the problem down") ||
-                          lastCandidateAnswer.toLowerCase().includes("validate with tests");
+                          lastCandidateAnswer.toLowerCase().includes("validate with tests") ||
+                          lastCandidateAnswer.toLowerCase().includes("break down the problem");
     const isVeryShort = lastCandidateAnswer.trim().length > 0 && lastCandidateAnswer.trim().length < 40;
     const hasTechKeywords = [
       "prometheus", "log", "metric", "trace", "python", "docker", "kubernetes", "k8s",
@@ -215,21 +220,20 @@ function mockLLMResponse({ systemPrompt, messages }) {
     if (isBoilerplate) {
       correctness = "Incorrect";
       misconception = "Candidate relies on a generic problem-solving framework and avoids answering the specific technical details.";
-      // If we are already beyond the diagnostic turn (e.g., questionsAsked >= 2), transition to the next topic.
       if (questionsAsked >= 2) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `Thanks for that. Let's move on to the next topic in our plan: "${nextTopic.title}". Can you give me an overview of your experience with this and how you applied it?`;
+          question = `Understood. Let's move forward to the next topic in our plan: "${nextTopic.title}". As a ${candidateRole}, how have you implemented this in production systems?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
-          question = `Thank you, ${candidateName}. Those were all the questions I had for today. You did a great job walking me through your experience!`;
+          question = `Thank you, ${candidateName}! That covers all our technical modules today. You've walked through several core engineering trade-offs with me!`;
         }
       } else {
         decision = "Diagnostic question";
         action = "follow_up";
-        question = `Let's take a step back. Before going into details of ${currentTopicTitle}, can you explain the fundamental prerequisite of how this concept works in a simpler, high-level scenario?`;
+        question = `I hear what you're saying about breaking down problems, but let's look at the actual technical mechanics. For ${currentTopicTitle}, what specific tools or code structures do you use?`;
       }
     } else if (isVeryShort) {
       correctness = "Partial";
@@ -238,16 +242,16 @@ function mockLLMResponse({ systemPrompt, messages }) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `Thanks for that explanation. Let's move on to the next topic in our plan: "${nextTopic.title}". Can you give me an overview of your experience with this and how you applied it?`;
+          question = `Got it. Let's transition to our next core topic: "${nextTopic.title}". From your experience as a ${candidateRole}, can you outline your approach here?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
-          question = `Thank you, ${candidateName}. Those were all the questions I had for today. You did a great job walking me through your experience!`;
+          question = `Thank you, ${candidateName}! That concludes our technical assessment session. Appreciate you sharing your insights!`;
         }
       } else {
         decision = "Clarification follow-up";
         action = "follow_up";
-        question = `Could you clarify how exactly you implemented this? Please share a concrete example or configuration detail.`;
+        question = `That gives a high-level picture. Could you expand on how you applied this as a ${candidateRole}? What specific configuration or library calls were involved?`;
       }
     } else if (!hasTechKeywords && lastCandidateAnswer.trim().length > 0) {
       correctness = "Incorrect";
@@ -256,16 +260,16 @@ function mockLLMResponse({ systemPrompt, messages }) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `Thanks. Let's move on to the next topic in our plan: "${nextTopic.title}". Can you give me an overview of your experience with this and how you applied it?`;
+          question = `Fair observation. Let's move on to "${nextTopic.title}". What key architectural considerations do you prioritize when building for this?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
-          question = `Thank you, ${candidateName}. Those were all the questions I had for today. You did a great job walking me through your experience!`;
+          question = `Thank you, ${candidateName}! That completes all the planned technical evaluation topics today!`;
         }
       } else {
         decision = "Diagnostic question";
         action = "follow_up";
-        question = `I'd like to trace the basics of this. What is the fundamental problem that ${currentTopicTitle} is designed to solve in a standard architecture?`;
+        question = `I see your point, but let's touch on the foundational principles. What core problem does ${currentTopicTitle} solve in a ${candidateRole} workflow?`;
       }
     } else {
       // Correct technical response!
@@ -273,16 +277,16 @@ function mockLLMResponse({ systemPrompt, messages }) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `Excellent description. Let's move on to the next topic in our plan: "${nextTopic.title}". Can you give me an overview of your experience with this and how you applied it?`;
+          question = `That's a solid explanation. Let's transition to "${nextTopic.title}". In your role as a ${candidateRole}, how do you approach system design for this?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
-          question = `Thank you, ${candidateName}. Those were all the questions I had for today. You did a great job walking me through your experience!`;
+          question = `Excellent work, ${candidateName}! That completes all our technical assessment modules for today.`;
         }
       } else {
         decision = "Deeper follow-up";
         action = "follow_up";
-        question = `That is correct. Let's dive deeper: when deploying this in production, what specific trade-offs or edge cases did you encounter, and how did you resolve them?`;
+        question = `That's a great point regarding production behavior. Diving deeper, as a ${candidateRole}, how do you handle edge cases and scale limits with ${currentTopicTitle}?`;
       }
     }
 
