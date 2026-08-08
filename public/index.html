@@ -591,7 +591,10 @@
     }
 
     .sidebar-plan-section {
-      display: none !important;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
 
     .sidebar-plan-title {
@@ -1965,9 +1968,12 @@
         showTyping(false);
         renderMessageBubble('Interviewer', data.reply, 'interviewer');
         
+        if (data.plan) localPlan = data.plan;
+        if (typeof data.currentIndex === 'number') activePlanIndex = data.currentIndex;
+
         renderPlanSidebar();
         updateProgressBar();
-        updateSidebarProgressPanel();
+        updateSidebarProgressPanel(data.stats);
       } catch (err) {
         showTyping(false);
         alert('Server API Call Failed: ' + err.message);
@@ -1975,25 +1981,27 @@
       }
     }
 
-    function updateSidebarProgressPanel() {
+    function updateSidebarProgressPanel(stats) {
       if (!selectedCandidate || localPlan.length === 0) return;
       const currentTopic = localPlan[activePlanIndex] || { title: "N/A" };
       document.getElementById('sidebar-current-module').innerText = currentTopic.title;
 
-      // Count total questions in plan
-      const totalQuestions = localPlan.reduce((sum, p) => sum + p.questionBudget, 0);
-      // Count answered questions
-      let questionsAskedSoFar = 0;
-      localPlan.forEach((p, idx) => {
-        if (idx < activePlanIndex) {
-          questionsAskedSoFar += p.questionBudget;
-        } else if (idx === activePlanIndex) {
-          questionsAskedSoFar += p.questionsAsked;
-        }
-      });
-      questionsAskedSoFar = Math.min(totalQuestions, questionsAskedSoFar);
+      let currentQ = 1;
+      let totalQ = 11;
+      if (stats) {
+        totalQ = stats.totalQuestions;
+        currentQ = Math.min(totalQ, stats.questionsAnswered + 1);
+      } else {
+        totalQ = localPlan.reduce((sum, p) => sum + p.questionBudget, 0);
+        let qCount = 0;
+        localPlan.forEach((p, idx) => {
+          if (idx < activePlanIndex) qCount += p.questionBudget;
+          else if (idx === activePlanIndex) qCount += p.questionsAsked;
+        });
+        currentQ = Math.min(totalQ, qCount);
+      }
 
-      document.getElementById('sidebar-current-question').innerText = `${questionsAskedSoFar}/${totalQuestions}`;
+      document.getElementById('sidebar-current-question').innerText = `${currentQ}/${totalQ}`;
     }
 
     function rebuildPlanMatrix(candidate) {
@@ -2021,9 +2029,10 @@
 
       localPlan.forEach((p, idx) => {
         const item = document.createElement('div');
-        item.className = `plan-node ${idx === activePlanIndex ? 'active' : ''} ${p.completed ? 'completed' : ''}`;
+        const completed = idx < activePlanIndex;
+        item.className = `plan-node ${idx === activePlanIndex ? 'active' : ''} ${completed ? 'completed' : ''}`;
         
-        const qAsked = idx === activePlanIndex ? p.questionsAsked : (p.completed ? p.questionBudget : 0);
+        const qAsked = idx === activePlanIndex ? p.questionsAsked : (completed ? p.questionBudget : 0);
 
         item.innerHTML = `
           <div class="plan-header">
@@ -2151,8 +2160,14 @@
     }
 
     function processNextTurnState(response) {
+      if (response.plan) {
+        localPlan = response.plan;
+      }
+      if (typeof response.currentIndex === 'number') {
+        activePlanIndex = response.currentIndex;
+      }
+
       if (response.done) {
-        localPlan[activePlanIndex].completed = true;
         activePlanIndex = localPlan.length;
         renderPlanSidebar();
         updateProgressBar();
@@ -2160,22 +2175,9 @@
         return;
       }
 
-      const currentTopic = localPlan[activePlanIndex];
-      const replyLower = response.reply.toLowerCase();
-
-      if (replyLower.includes("let's move on") || replyLower.includes("next topic") || currentTopic.questionsAsked >= currentTopic.questionBudget) {
-        currentTopic.completed = true;
-        if (activePlanIndex < localPlan.length - 1) {
-          activePlanIndex++;
-          localPlan[activePlanIndex].questionsAsked = 1;
-        }
-      } else {
-        currentTopic.questionsAsked++;
-      }
-
       renderPlanSidebar();
       updateProgressBar();
-      updateSidebarProgressPanel();
+      updateSidebarProgressPanel(response.stats);
     }
 
     function triggerSuggestedAnswer() {

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getSession, createSession, updateSession } from "./store.js";
-import { startInterview, handleTurn, forceConcludeInterview } from "./interviewEngine.js";
+import { startInterview, handleTurn, forceConcludeInterview, calculateSessionStats } from "./interviewEngine.js";
 import { readFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -63,7 +63,8 @@ router.post("/interview", async (req, res) => {
 
       const { state, reply } = await startInterview(candidate);
       createSession(sessionId, state);
-      return res.json({ reply, done: false });
+      const stats = calculateSessionStats(state);
+      return res.json({ reply, done: false, plan: state.plan, currentIndex: state.currentIndex, stats });
     }
 
     // --- Conversation Turn ---
@@ -83,17 +84,19 @@ router.post("/interview", async (req, res) => {
     const result = await handleTurn(existing, message);
     updateSession(sessionId, result.state);
 
+    const stats = calculateSessionStats(result.state);
+
     if (result.done) {
       return res.json({
         reply: result.reply,
         done: true,
         feedback: result.feedback,
         analysis: result.analysis,
-        stats: result.state.stats,
+        stats,
       });
     }
 
-    return res.json({ reply: result.reply, done: false, analysis: result.analysis });
+    return res.json({ reply: result.reply, done: false, analysis: result.analysis, plan: result.state.plan, currentIndex: result.state.currentIndex, stats });
   } catch (err) {
     console.error("Interview error:", err);
     return res.status(500).json({
