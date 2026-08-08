@@ -64,7 +64,7 @@ router.post("/interview", async (req, res) => {
       const { state, reply } = await startInterview(candidate);
       createSession(sessionId, state);
       const stats = calculateSessionStats(state);
-      return res.json({ reply, done: false, plan: state.plan, currentIndex: state.currentIndex, stats });
+      return res.json({ reply, done: false, plan: state.plan, currentIndex: state.currentIndex, stats, difficulty: state.difficulty, difficultyHistory: state.difficultyHistory });
     }
 
     // --- Conversation Turn ---
@@ -93,10 +93,12 @@ router.post("/interview", async (req, res) => {
         feedback: result.feedback,
         analysis: result.analysis,
         stats,
+        difficulty: result.state.difficulty,
+        difficultyHistory: result.state.difficultyHistory,
       });
     }
 
-    return res.json({ reply: result.reply, done: false, analysis: result.analysis, plan: result.state.plan, currentIndex: result.state.currentIndex, stats });
+    return res.json({ reply: result.reply, done: false, analysis: result.analysis, plan: result.state.plan, currentIndex: result.state.currentIndex, stats, difficulty: result.state.difficulty, difficultyHistory: result.state.difficultyHistory });
   } catch (err) {
     console.error("Interview error:", err);
     return res.status(500).json({

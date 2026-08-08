@@ -1,6 +1,7 @@
 import { buildPlan } from "./planBuilder.js";
 import { callLLM } from "./llm/index.js";
 import { openingSystemPrompt, turnDecisionSystemPrompt, feedbackSystemPrompt } from "./promptBuilder.js";
+import { INITIAL_DIFFICULTY, nextDifficulty } from "./difficultyEngine.js";
 import { parseJsonLoose } from "./util.js";
 
 export function calculateSessionStats(session) {
@@ -80,6 +81,8 @@ export async function startInterview(candidate) {
       done: false,
       startTime: Date.now(),
       evaluations: [],
+      difficulty: INITIAL_DIFFICULTY,
+      difficultyHistory: [INITIAL_DIFFICULTY],
     },
     reply: opening.trim(),
   };
@@ -98,6 +101,7 @@ export async function handleTurn(session, candidateMessage) {
     currentTopic,
     questionsAskedForTopic: currentTopic.questionsAsked,
     transcript,
+    difficulty: session.difficulty ?? INITIAL_DIFFICULTY,
   });
 
   const raw = await callLLM({
@@ -131,13 +135,24 @@ export async function handleTurn(session, candidateMessage) {
     }
   }
 
+  const difficulty = nextDifficulty(session.difficulty ?? INITIAL_DIFFICULTY, analysis.correctness);
+
   const evaluations = [...(session.evaluations || []), analysis.correctness];
 
   if (decision.action === "follow_up") {
     currentTopic.questionsAsked += 1;
     transcript.push({ role: "assistant", content: decision.question });
     return {
-      state: { ...session, plan, currentIndex, transcript, done: false, evaluations },
+      state: {
+        ...session,
+        plan,
+        currentIndex,
+        transcript,
+        done: false,
+        evaluations,
+        difficulty,
+        difficultyHistory: [...(session.difficultyHistory || []), difficulty],
+      },
       reply: decision.question,
       done: false,
       analysis,
@@ -166,7 +181,17 @@ export async function handleTurn(session, candidateMessage) {
     }
 
     return {
-      state: { ...session, plan, currentIndex, transcript, done: true, evaluations, stats },
+      state: {
+        ...session,
+        plan,
+        currentIndex,
+        transcript,
+        done: true,
+        evaluations,
+        stats,
+        difficulty,
+        difficultyHistory: [...(session.difficultyHistory || []), difficulty],
+      },
       reply: decision.question || "Interview completed.",
       done: true,
       feedback,
@@ -178,7 +203,16 @@ export async function handleTurn(session, candidateMessage) {
   transcript.push({ role: "assistant", content: decision.question });
 
   return {
-    state: { ...session, plan, currentIndex: nextIndex, transcript, done: false, evaluations },
+    state: {
+      ...session,
+      plan,
+      currentIndex: nextIndex,
+      transcript,
+      done: false,
+      evaluations,
+      difficulty,
+      difficultyHistory: [...(session.difficultyHistory || []), difficulty],
+    },
     reply: decision.question,
     done: false,
     analysis,

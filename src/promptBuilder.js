@@ -1,3 +1,5 @@
+import { difficultyLabel } from "./difficultyEngine.js";
+
 function candidateSummary(candidate) {
   const m = candidate.member || {};
   
@@ -82,7 +84,7 @@ RULES
 - Respond with ONLY the welcome + first question as plain text. No preamble, no JSON, no markdown formatting.`;
 }
 
-export function turnDecisionSystemPrompt({ candidate, plan, currentTopic, questionsAskedForTopic, transcript }) {
+export function turnDecisionSystemPrompt({ candidate, plan, currentTopic, questionsAskedForTopic, transcript, difficulty }) {
   return `You are a warm, sharp technical interviewer continuing an in-progress technical interview.
 
 CANDIDATE
@@ -94,6 +96,8 @@ ${planSummary(plan)}
 CURRENT TOPIC: Day ${currentTopic.day} - "${currentTopic.title}"
 Current Weakness Level: ${currentTopic.weaknessScore}/5
 Questions already asked on this topic: ${questionsAskedForTopic} / budget ${currentTopic.questionBudget}
+CURRENT DIFFICULTY LEVEL: ${difficulty}/5 — ${difficultyLabel(difficulty)}
+When generating the "question" field, calibrate its difficulty to match this level.
 
 TRANSCRIPT SO FAR (most recent last)
 ${transcript.map((t) => `${t.role === "assistant" ? "INTERVIEWER" : "CANDIDATE"}: ${t.content}`).join("\n")}

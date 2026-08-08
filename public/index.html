@@ -1342,6 +1342,7 @@
             <div><span style="color: var(--text-muted);">📋 Session ID:</span> <span id="sidebar-session-id" style="color: var(--primary); font-weight: 700;">--</span></div>
             <div><span style="color: var(--text-muted);">📚 Module:</span> <span id="sidebar-current-module" style="color: #fff; font-weight: 600;">--</span></div>
             <div><span style="color: var(--text-muted);">❓ Question:</span> <span id="sidebar-current-question" style="color: #fff; font-weight: 600;">--</span></div>
+            <div><span style="color: var(--text-muted);">Difficulty:</span> <span id="sidebar-current-difficulty" style="color: #fff; font-weight: 600;">--</span></div>
             <div><span style="color: var(--text-muted);">⏱ Status:</span> <span style="color: var(--success); font-weight: 700;">In Progress</span></div>
           </div>
 
@@ -1969,6 +1970,9 @@
         renderPlanSidebar();
         updateProgressBar();
         updateSidebarProgressPanel(data.stats);
+        if (typeof data.difficulty === 'number') {
+          document.getElementById('sidebar-current-difficulty').innerText = `${data.difficulty}/5`;
+        }
       } catch (err) {
         showTyping(false);
         alert('Server API Call Failed: ' + err.message);
@@ -2133,6 +2137,9 @@
       renderPlanSidebar();
       updateProgressBar();
       updateSidebarProgressPanel(response.stats);
+      if (typeof response.difficulty === 'number') {
+        document.getElementById('sidebar-current-difficulty').innerText = `${response.difficulty}/5`;
+      }
     }
 
     function triggerSuggestedAnswer() {
