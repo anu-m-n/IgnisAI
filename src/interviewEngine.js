@@ -81,6 +81,7 @@ export async function startInterview(candidate) {
       done: false,
       startTime: Date.now(),
       evaluations: [],
+      missedConcepts: [],
       difficulty: INITIAL_DIFFICULTY,
       difficultyHistory: [INITIAL_DIFFICULTY],
     },
@@ -135,8 +136,22 @@ export async function handleTurn(session, candidateMessage) {
     }
   }
 
-  const difficulty = nextDifficulty(session.difficulty ?? INITIAL_DIFFICULTY, analysis.correctness);
+  const conceptExplanation = (decision.conceptExplanation && decision.conceptExplanation !== "none")
+    ? decision.conceptExplanation
+    : null;
 
+  const missedConcepts = [...(session.missedConcepts || [])];
+  if ((analysis.correctness === "Incorrect" || analysis.correctness === "Partial") && conceptExplanation) {
+    missedConcepts.push({
+      topic: currentTopic.title,
+      question: decision.question || "Topic question",
+      candidateAnswer: candidateMessage,
+      concept: decision.missedConceptSummary || analysis.misconception || currentTopic.title,
+      explanation: conceptExplanation,
+    });
+  }
+
+  const difficulty = nextDifficulty(session.difficulty ?? INITIAL_DIFFICULTY, analysis.correctness);
   const evaluations = [...(session.evaluations || []), analysis.correctness];
 
   if (decision.action === "follow_up") {
@@ -150,10 +165,12 @@ export async function handleTurn(session, candidateMessage) {
         transcript,
         done: false,
         evaluations,
+        missedConcepts,
         difficulty,
         difficultyHistory: [...(session.difficultyHistory || []), difficulty],
       },
       reply: decision.question,
+      conceptExplanation,
       done: false,
       analysis,
     };
@@ -168,13 +185,17 @@ export async function handleTurn(session, candidateMessage) {
 
     const stats = calculateSessionStats({ ...session, plan, transcript, evaluations, done: true });
 
-    const feedbackPrompt = feedbackSystemPrompt({ candidate, plan, transcript, stats });
+    const feedbackPrompt = feedbackSystemPrompt({ candidate, plan, transcript, stats, missedConcepts });
     const feedbackRaw = await callLLM({
       systemPrompt: feedbackPrompt,
       messages: [{ role: "user", content: "Write the final feedback JSON now." }],
       maxTokens: 2048,
     });
     const feedback = parseJsonLoose(feedbackRaw);
+
+    if (!feedback.missedConcepts || feedback.missedConcepts.length === 0) {
+      feedback.missedConcepts = missedConcepts;
+    }
 
     if (feedback.consistencyScore) {
       stats.consistencyScore = feedback.consistencyScore;
@@ -188,11 +209,13 @@ export async function handleTurn(session, candidateMessage) {
         transcript,
         done: true,
         evaluations,
+        missedConcepts,
         stats,
         difficulty,
         difficultyHistory: [...(session.difficultyHistory || []), difficulty],
       },
       reply: decision.question || "Interview completed.",
+      conceptExplanation,
       done: true,
       feedback,
       analysis,
@@ -210,10 +233,12 @@ export async function handleTurn(session, candidateMessage) {
       transcript,
       done: false,
       evaluations,
+      missedConcepts,
       difficulty,
       difficultyHistory: [...(session.difficultyHistory || []), difficulty],
     },
     reply: decision.question,
+    conceptExplanation,
     done: false,
     analysis,
   };

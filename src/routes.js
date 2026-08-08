@@ -89,6 +89,7 @@ router.post("/interview", async (req, res) => {
     if (result.done) {
       return res.json({
         reply: result.reply,
+        conceptExplanation: result.conceptExplanation,
         done: true,
         feedback: result.feedback,
         analysis: result.analysis,
@@ -98,7 +99,17 @@ router.post("/interview", async (req, res) => {
       });
     }
 
-    return res.json({ reply: result.reply, done: false, analysis: result.analysis, plan: result.state.plan, currentIndex: result.state.currentIndex, stats, difficulty: result.state.difficulty, difficultyHistory: result.state.difficultyHistory });
+    return res.json({
+      reply: result.reply,
+      conceptExplanation: result.conceptExplanation,
+      done: false,
+      analysis: result.analysis,
+      plan: result.state.plan,
+      currentIndex: result.state.currentIndex,
+      stats,
+      difficulty: result.state.difficulty,
+      difficultyHistory: result.state.difficultyHistory,
+    });
   } catch (err) {
     console.error("Interview error:", err);
     return res.status(500).json({

@@ -76,11 +76,12 @@ ${candidateSummary(candidate)}
 INTERVIEW PLAN (in order, do not deviate from this topic order)
 ${planSummary(plan)}
 
-RULES
+DYNAMIC QUESTION GENERATION RULES
+- Do NOT use pre-planned, static, or canned questions.
+- Dynamically frame your first question to match the candidate's applied position (${candidate.member?.jobRole || 'Engineer'}), their experience level (${candidate.member?.yearsExperience || 0} years), and the first topic in the plan.
 - Ask exactly ONE question at a time. Never bundle multiple questions.
-- Start by welcoming the candidate by name using this exact format: "Hello [Candidate Name]. Welcome to your IGNIS AI Technical Assessment. Based on your profile and curriculum progress, I will conduct an adaptive technical interview tailored to your learning journey." Then ask your first question about the FIRST topic in the plan above.
-- Topics with a higher weakness score and skipped topics deserve tougher, more specific probing — don't be afraid to ask something that would expose a shallow understanding.
-- Keep your tone encouraging but rigorous. This is a real assessment, not small talk.
+- Start by welcoming the candidate by name using this exact format: "Hello ${candidate.member?.name || 'Candidate'}. Welcome to your IGNIS AI Technical Assessment. Based on your profile as a ${candidate.member?.jobRole || 'Software Engineer'}, I will conduct an adaptive technical assessment tailored to your background." Then ask your dynamically framed first question about the FIRST topic in the plan above.
+- Keep your tone encouraging but rigorous.
 - Respond with ONLY the welcome + first question as plain text. No preamble, no JSON, no markdown formatting.`;
 }
 
@@ -97,18 +98,23 @@ CURRENT TOPIC: Day ${currentTopic.day} - "${currentTopic.title}"
 Current Weakness Level: ${currentTopic.weaknessScore}/5
 Questions already asked on this topic: ${questionsAskedForTopic} / budget ${currentTopic.questionBudget}
 CURRENT DIFFICULTY LEVEL: ${difficulty}/5 — ${difficultyLabel(difficulty)}
-When generating the "question" field, calibrate its difficulty to match this level.
 
 TRANSCRIPT SO FAR (most recent last)
 ${transcript.map((t) => `${t.role === "assistant" ? "INTERVIEWER" : "CANDIDATE"}: ${t.content}`).join("\n")}
 
-Evaluate the candidate's most recent answer internally:
-- Does the candidate actually understand the concept?
-- Is the answer technically correct and relevant to the question?
-- Is the candidate explaining the concept in their own understanding or just repeating a generic textbook definition?
-- Does the answer appear copied or AI-generated rather than demonstrating genuine practical understanding? (Do NOT automatically flag well-written answers; look for lack of specific details or failure to explain why/how).
-- Can the candidate explain WHY, not just WHAT?
-- Assess what concepts they understand and what areas are weak or missing.
+DYNAMIC QUESTION FRAMING & ADAPTIVITY INSTRUCTIONS:
+1. DO NOT ask canned, static, or repetitive textbook questions.
+2. Dynamically frame every question based on:
+   - Candidate's applied position: ${candidate.member?.jobRole || 'Technical Candidate'}
+   - Candidate's experience level: ${candidate.member?.yearsExperience || 0} years
+   - Specific technical nuances or gaps in their PREVIOUS answer
+   - Active difficulty level (${difficulty}/5 — ${difficultyLabel(difficulty)})
+3. Vary scenario phrasing every time so questions are fresh, practical, and highly realistic.
+
+IN-FLIGHT CONCEPT REMEDIATION & MISSING KNOWLEDGE RULE:
+If the candidate's last answer is "Incorrect" or "Partial" (or evasive/incomplete):
+- You MUST provide a clear, supportive 1-2 sentence educational explanation of the missing or misconstrued core concept in the "conceptExplanation" field.
+- This ensures the candidate learns the missing concept immediately before answering the next question.
 
 Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly this shape:
 
@@ -117,11 +123,13 @@ Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly t
     "correctness": "Correct" | "Partial" | "Incorrect",
     "misconception": "none" | "short description of the diagnosed root misconception if Incorrect/Partial, otherwise 'none'",
     "decision": "Deeper follow-up" | "Clarification follow-up" | "Diagnostic question" | "Next topic transition" | "Interview completion",
-    "reasoning": "Detailed internal analysis of the candidate's conceptual understanding, tech correctness, vagueness, memorization, or copied indicators, and your choice of next question.",
-    "updatedWeaknessScore": 1 | 2 | 3 | 4 | 5 // Assign the new weakness score (1=Excellent/No Weakness, 5=Severe Weakness/Complete Misconception) based on this answer and previous interactions.
+    "reasoning": "Detailed internal analysis of candidate response, conceptual depth, role calibration, and next question logic.",
+    "updatedWeaknessScore": 1 | 2 | 3 | 4 | 5
   },
+  "conceptExplanation": "If Incorrect or Partial, provide a clear 1-2 sentence educational explanation of the missing concept to teach the candidate before the next question. If Correct, set to 'none'.",
+  "missedConceptSummary": "If Incorrect or Partial, name the key concept that was missing or misconstrued (e.g. 'LLM Context Window Limits'). If Correct, set to 'none'.",
   "action": "follow_up" | "next_topic",
-  "question": "the exact next question to ask, dynamically generated based on the previous answer and analysis"
+  "question": "the exact next dynamically framed question to ask, calibrated to candidate role, prior response, and difficulty level"
 }
 
 Pedagogical Rules:
@@ -130,21 +138,15 @@ Pedagogical Rules:
    - "Partial": Vague, memorized/textbook definition without explanation, missing key details, or contains minor inaccuracies.
    - "Incorrect": Flatly incorrect, evasive, or showing complete lack of understanding of the topic.
 2. "updatedWeaknessScore":
-   - If Correct and they answered a challenging probe well: decrease the weakness score (e.g. set to 1 or 2).
-   - If Partial/generic and they struggled to explain why/how: keep or increase the weakness score (e.g. set to 3 or 4).
-   - If Incorrect or completely evasive: increase the weakness score to 4 or 5.
-3. "decision" and recovery logic:
-   - If Correct: Choose "Deeper follow-up" to ask a more advanced practical scenario or probe deeper (trade-offs, design choices, trade-offs, code details), OR "Next topic transition" if budget is exhausted or mastery is demonstrated.
-   - If Partial: Choose "Clarification follow-up" (or deeper check) to probe the specific missing details or verify if they actually understand.
-   - If Incorrect: Choose "Diagnostic question" to ask a simpler prerequisite question testing the fundamental concept before moving on.
-4. "action" mapping:
+   - If Correct and they answered a challenging probe well: decrease the weakness score (set to 1 or 2).
+   - If Partial/generic and they struggled to explain why/how: keep or increase weakness score (set to 3 or 4).
+   - If Incorrect or completely evasive: set weakness score to 4 or 5.
+3. "action" mapping:
    - If decision is "Deeper follow-up", "Clarification follow-up", or "Diagnostic question", set "action" to "follow_up".
-   - If decision is "Next topic transition" or "Interview completion", set "action" to "next_topic".
-5. Dynamic Generation:
-   - Construct a natural, dynamic conversation. Never ask more than one question. Avoid generic template phrasing.`;
+   - If decision is "Next topic transition" or "Interview completion", set "action" to "next_topic".`;
 }
 
-export function feedbackSystemPrompt({ candidate, plan, transcript, stats }) {
+export function feedbackSystemPrompt({ candidate, plan, transcript, stats, missedConcepts = [] }) {
   const statsSummary = stats ? `
 INTERVIEW STATISTICS:
 - Total Questions in Plan: ${stats.totalQuestions}
@@ -156,6 +158,10 @@ INTERVIEW STATISTICS:
 - Session Duration: ${stats.durationStr}
 ` : '';
 
+  const missedSummaryText = missedConcepts.length > 0
+    ? missedConcepts.map((m, idx) => `${idx + 1}. [${m.topic}] ${m.concept}: ${m.explanation}`).join('\n')
+    : 'No critical missed concepts recorded during the session.';
+
   return `You are a technical interviewer writing up final structured feedback after completing an interview.
 
 CANDIDATE
@@ -165,34 +171,42 @@ PLAN COVERED
 ${planSummary(plan)}
 ${statsSummary}
 
+MISSED CONCEPTS & IN-FLIGHT REMEDIATIONS RECORDED DURING SESSION:
+${missedSummaryText}
+
 FULL TRANSCRIPT
 ${transcript.map((t) => `${t.role === "assistant" ? "INTERVIEWER" : "CANDIDATE"}: ${t.content}`).join("\n")}
 
 Write the final feedback. Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly this shape:
 
 {
-  "overallScore": 50, // overall numerical score out of 100 based on their performance
-  "scoreLabel": "Satisfactory Performance", // overall label: e.g. "Excellent Performance", "Satisfactory Performance", "Needs Improvement", or "Unsatisfactory Performance"
+  "overallScore": 85, // overall numerical score out of 100 based on performance
+  "scoreLabel": "Excellent Performance", // "Excellent Performance", "Satisfactory Performance", "Needs Improvement", or "Unsatisfactory Performance"
   "recommendation": "Recommended" | "Maybe Recommended" | "Not Recommended",
-  "executiveSummary": "A concise final assessment explaining: 1) overall candidate performance, 2) technical strengths, 3) major weaknesses, 4) how well the candidate matched the role, and 5) whether they demonstrated sufficient technical knowledge.",
+  "executiveSummary": "A concise final assessment explaining: 1) overall candidate performance, 2) technical strengths, 3) key weaknesses or missed concepts, 4) how well candidate matched the applied position (${candidate.member?.jobRole}), and 5) hiring verdict.",
   "topicBreakdown": [
     {
       "topicName": "Topic Name",
-      "score": 7, // score out of 10
-      "explanation": "Short explanation based on the candidate's actual answer"
+      "score": 8, // score out of 10
+      "explanation": "Short explanation based on the candidate's actual answers"
+    }
+  ],
+  "missedConcepts": [
+    {
+      "topic": "Topic Name",
+      "concept": "Specific concept name",
+      "explanation": "Brief summary of concept gap and remediation provided"
     }
   ],
   "strengths": [
     "Demonstrated strong understanding of...",
-    "Clearly explained...",
-    "Correctly applied..."
+    "Clearly explained..."
   ],
   "areasForGrowth": [
     "Weak understanding of...",
-    "Unable to explain...",
-    "Missing knowledge of..."
+    "Needs improvement in..."
   ]
 }
 
-Be specific and reference actual moments from the transcript. If the candidate exited early, reflect this in the decision, overallScore, status, and explain it clearly in the executiveSummary.`;
+Be specific and reference actual moments from the transcript. If candidate exited early, reflect this in overallScore, status, and executiveSummary.`;
 }

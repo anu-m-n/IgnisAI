@@ -287,12 +287,19 @@ function mockLLMResponse({ systemPrompt, messages }) {
     }
 
     let updatedWeaknessScore = 3;
+    let conceptExplanation = "none";
+    let missedConceptSummary = "none";
+
     if (correctness === "Correct") {
-      updatedWeaknessScore = Math.max(1, currentTopicMatch ? 2 : 2); // set 2 for Correct
+      updatedWeaknessScore = 2;
     } else if (correctness === "Incorrect") {
-      updatedWeaknessScore = 5; // set 5 for Incorrect
+      updatedWeaknessScore = 5;
+      missedConceptSummary = `Core technical principles of ${currentTopicTitle}`;
+      conceptExplanation = `In production architectures, ${currentTopicTitle} requires precise component orchestration, telemetry monitoring, and explicit configuration parameters rather than high-level generic statements.`;
     } else if (correctness === "Partial") {
-      updatedWeaknessScore = 4; // set 4 for Partial
+      updatedWeaknessScore = 4;
+      missedConceptSummary = `Practical implementation depth in ${currentTopicTitle}`;
+      conceptExplanation = `When discussing ${currentTopicTitle}, it is essential to detail the exact schema, tool parameters, or architectural trade-offs applied in your workflow.`;
     }
 
     return JSON.stringify({
@@ -303,6 +310,8 @@ function mockLLMResponse({ systemPrompt, messages }) {
         reasoning: `Mock evaluation: Candidate answer detected as ${correctness}. Selecting pedagogical action: ${decision}.`,
         updatedWeaknessScore
       },
+      conceptExplanation,
+      missedConceptSummary,
       action,
       question
     }, null, 2);
