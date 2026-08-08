@@ -597,85 +597,63 @@
       gap: 0.75rem;
     }
 
-    .sidebar-plan-title {
-      font-size: 0.75rem;
+    .topic-list-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .topic-list-title {
+      font-size: 0.85rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.05em;
       color: var(--text-muted);
       font-weight: 700;
     }
-
-    .plan-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-    }
-
-    .plan-node {
-      background: rgba(6, 9, 19, 0.4);
+    .topic-item {
+      background-color: rgba(11, 15, 25, 0.4);
       border: 1px solid var(--border-color);
-      border-radius: 0.6rem;
+      border-radius: 0.5rem;
       padding: 0.75rem;
       display: flex;
       flex-direction: column;
-      gap: 0.35rem;
-      transition: all 0.2s ease;
-      position: relative;
+      gap: 0.25rem;
+      transition: all 0.2s;
     }
-
-    .plan-node.active {
+    .topic-item.active {
       border-color: var(--primary);
-      background: rgba(59, 130, 246, 0.08);
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.15);
+      background-color: rgba(59, 130, 246, 0.05);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.15);
     }
-
-    .plan-node.active::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 15%;
-      bottom: 15%;
-      width: 3px;
-      background-color: var(--primary);
-      border-radius: 0 99px 99px 0;
+    .topic-item.completed {
+      border-color: rgba(16, 185, 129, 0.4);
+      background-color: rgba(16, 185, 129, 0.03);
     }
-
-    .plan-node.completed {
-      border-color: rgba(16, 185, 129, 0.25);
-      background: rgba(16, 185, 129, 0.02);
-    }
-
-    .plan-node.completed .plan-title {
+    .topic-item.completed .topic-title-text {
       text-decoration: line-through;
       color: var(--text-muted);
     }
-
-    .plan-header {
+    .topic-meta-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .plan-day {
-      font-size: 0.7rem;
-      font-weight: 700;
+    .topic-day {
+      font-size: 0.75rem;
+      font-weight: 600;
       color: var(--text-muted);
     }
-
-    .plan-title {
-      font-size: 0.85rem;
+    .topic-title-text {
+      font-size: 0.875rem;
       font-weight: 600;
       color: #fff;
     }
-
-    .plan-status-row {
+    .topic-budget-info {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
       display: flex;
       justify-content: space-between;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      border-top: 1px dashed rgba(255,255,255,0.03);
-      padding-top: 0.35rem;
-      margin-top: 0.15rem;
     }
 
     /* Workspace Chat Frame */
@@ -1337,10 +1315,10 @@
             <div><span style="color: var(--text-muted);">⏱ Status:</span> <span style="color: var(--success); font-weight: 700;">In Progress</span></div>
           </div>
           
-          <div class="sidebar-plan-section">
-            <div class="sidebar-plan-title">Adaptive Probing Plan</div>
-            <div id="plan-list-element" class="plan-list">
-              <!-- Rendered dynamically -->
+          <div class="topic-list-container">
+            <div class="topic-list-title">Weakness Interview Plan</div>
+            <div id="topic-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+              <!-- Loaded dynamically -->
             </div>
           </div>
         </div>
@@ -2024,28 +2002,28 @@
     }
 
     function renderPlanSidebar() {
-      const parent = document.getElementById('plan-list-element');
-      parent.innerHTML = '';
-
+      const list = document.getElementById('topic-list');
+      if (!list) return;
+      list.innerHTML = '';
       localPlan.forEach((p, idx) => {
         const item = document.createElement('div');
         const completed = idx < activePlanIndex;
-        item.className = `plan-node ${idx === activePlanIndex ? 'active' : ''} ${completed ? 'completed' : ''}`;
+        item.className = `topic-item ${idx === activePlanIndex ? 'active' : ''} ${completed ? 'completed' : ''}`;
         
         const qAsked = idx === activePlanIndex ? p.questionsAsked : (completed ? p.questionBudget : 0);
 
         item.innerHTML = `
-          <div class="plan-header">
-            <span class="plan-day">DAY ${p.day}</span>
-            <span class="weakness-badge w-${p.weaknessScore}">w:${p.weaknessScore}</span>
+          <div class="topic-meta-row">
+            <span class="topic-day">Day ${p.day}</span>
+            <span class="weakness-badge w-${p.weaknessScore}">Weakness: ${p.weaknessScore}</span>
           </div>
-          <div class="plan-title">${p.title}</div>
-          <div class="plan-status-row">
+          <div class="topic-title-text">${p.title}</div>
+          <div class="topic-budget-info">
             <span>Budget: ${p.questionBudget} Qs</span>
-            <span>Progress: ${qAsked} / ${p.questionBudget}</span>
+            <span>Asked: ${qAsked}</span>
           </div>
         `;
-        parent.appendChild(item);
+        list.appendChild(item);
       });
     }
 
