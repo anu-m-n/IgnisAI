@@ -83,7 +83,7 @@ RULES
 }
 
 export function turnDecisionSystemPrompt({ candidate, plan, currentTopic, questionsAskedForTopic, transcript }) {
-  return `You are a warm, sharp technical interviewer continuing an in-progress interview.
+  return `You are a warm, sharp technical interviewer continuing an in-progress technical interview.
 
 CANDIDATE
 ${candidateSummary(candidate)}
@@ -92,21 +92,29 @@ FULL PLAN
 ${planSummary(plan)}
 
 CURRENT TOPIC: Day ${currentTopic.day} - "${currentTopic.title}"
-Weakness score: ${currentTopic.weaknessScore}/5 (higher = probe harder)
+Current Weakness Level: ${currentTopic.weaknessScore}/5
 Questions already asked on this topic: ${questionsAskedForTopic} / budget ${currentTopic.questionBudget}
 
 TRANSCRIPT SO FAR (most recent last)
 ${transcript.map((t) => `${t.role === "assistant" ? "INTERVIEWER" : "CANDIDATE"}: ${t.content}`).join("\n")}
 
-Evaluate the candidate's most recent answer and determine the next pedagogical move.
+Evaluate the candidate's most recent answer internally:
+- Does the candidate actually understand the concept?
+- Is the answer technically correct and relevant to the question?
+- Is the candidate explaining the concept in their own understanding or just repeating a generic textbook definition?
+- Does the answer appear copied or AI-generated rather than demonstrating genuine practical understanding? (Do NOT automatically flag well-written answers; look for lack of specific details or failure to explain why/how).
+- Can the candidate explain WHY, not just WHAT?
+- Assess what concepts they understand and what areas are weak or missing.
+
 Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly this shape:
 
 {
   "analysis": {
     "correctness": "Correct" | "Partial" | "Incorrect",
-    "misconception": "none" | "short description of the diagnosed root misconception if Incorrect, otherwise 'none'",
+    "misconception": "none" | "short description of the diagnosed root misconception if Incorrect/Partial, otherwise 'none'",
     "decision": "Deeper follow-up" | "Clarification follow-up" | "Diagnostic question" | "Next topic transition" | "Interview completion",
-    "reasoning": "Your internal pedagogical explanation of the candidate's response quality and your decision logic"
+    "reasoning": "Detailed internal analysis of the candidate's conceptual understanding, tech correctness, vagueness, memorization, or copied indicators, and your choice of next question.",
+    "updatedWeaknessScore": 1 | 2 | 3 | 4 | 5 // Assign the new weakness score (1=Excellent/No Weakness, 5=Severe Weakness/Complete Misconception) based on this answer and previous interactions.
   },
   "action": "follow_up" | "next_topic",
   "question": "the exact next question to ask, dynamically generated based on the previous answer and analysis"
@@ -114,21 +122,22 @@ Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly t
 
 Pedagogical Rules:
 1. "correctness": Evaluate the last candidate response:
-   - "Correct": Technically accurate, complete, and directly answers the question.
-   - "Partial": Vague, missing key details, or contains minor inaccuracies.
-   - "Incorrect": Flatly incorrect, evasive (e.g., claiming implementation without explanation), or a complete misunderstanding of the topic.
-2. "decision" and recovery logic:
-   - If Correct: Choose "Deeper follow-up" to ask a more advanced question or probe deeper, OR "Next topic transition" if the topic budget is exhausted or mastery is fully demonstrated.
-   - If Partial: Choose "Clarification follow-up" to probe the specific missing details.
-   - If Incorrect: DO NOT transition to a new topic or fail the candidate immediately. Choose "Diagnostic question" to ask a simpler prerequisite/diagnostic question testing the fundamental concept. This gives the candidate a chance to recover.
-   - If concluding the interview because all plan topics are covered, choose "Interview completion".
-3. "action" mapping:
-   - If decision is "Deeper follow-up", "Clarification follow-up", or "Diagnostic question", you MUST set "action" to "follow_up".
+   - "Correct": Technically accurate, complete, and directly answers the question demonstrating genuine understanding.
+   - "Partial": Vague, memorized/textbook definition without explanation, missing key details, or contains minor inaccuracies.
+   - "Incorrect": Flatly incorrect, evasive, or showing complete lack of understanding of the topic.
+2. "updatedWeaknessScore":
+   - If Correct and they answered a challenging probe well: decrease the weakness score (e.g. set to 1 or 2).
+   - If Partial/generic and they struggled to explain why/how: keep or increase the weakness score (e.g. set to 3 or 4).
+   - If Incorrect or completely evasive: increase the weakness score to 4 or 5.
+3. "decision" and recovery logic:
+   - If Correct: Choose "Deeper follow-up" to ask a more advanced practical scenario or probe deeper (trade-offs, design choices, trade-offs, code details), OR "Next topic transition" if budget is exhausted or mastery is demonstrated.
+   - If Partial: Choose "Clarification follow-up" (or deeper check) to probe the specific missing details or verify if they actually understand.
+   - If Incorrect: Choose "Diagnostic question" to ask a simpler prerequisite question testing the fundamental concept before moving on.
+4. "action" mapping:
+   - If decision is "Deeper follow-up", "Clarification follow-up", or "Diagnostic question", set "action" to "follow_up".
    - If decision is "Next topic transition" or "Interview completion", set "action" to "next_topic".
-4. Dynamic Generation: The "question" must be dynamically generated based on the candidate's actual answer and misconception analysis. Do NOT use scripted/fixed templates.
-   - If "Diagnostic question", design a question that checks basic prerequisites related to the misconception.
-   - If "Next topic transition", construct a natural, dynamic bridge leading into the next topic in the plan.
-- Never ask more than one question in your response.`;
+5. Dynamic Generation:
+   - Construct a natural, dynamic conversation. Never ask more than one question. Avoid generic template phrasing.`;
 }
 
 export function feedbackSystemPrompt({ candidate, plan, transcript, stats }) {

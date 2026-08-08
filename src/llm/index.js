@@ -286,12 +286,22 @@ function mockLLMResponse({ systemPrompt, messages }) {
       }
     }
 
+    let updatedWeaknessScore = 3;
+    if (correctness === "Correct") {
+      updatedWeaknessScore = Math.max(1, currentTopicMatch ? 2 : 2); // set 2 for Correct
+    } else if (correctness === "Incorrect") {
+      updatedWeaknessScore = 5; // set 5 for Incorrect
+    } else if (correctness === "Partial") {
+      updatedWeaknessScore = 4; // set 4 for Partial
+    }
+
     return JSON.stringify({
       analysis: {
         correctness,
         misconception,
         decision,
-        reasoning: `Mock evaluation: Candidate answer detected as ${correctness}. Selecting pedagogical action: ${decision}.`
+        reasoning: `Mock evaluation: Candidate answer detected as ${correctness}. Selecting pedagogical action: ${decision}.`,
+        updatedWeaknessScore
       },
       action,
       question

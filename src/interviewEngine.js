@@ -119,6 +119,18 @@ export async function handleTurn(session, candidateMessage) {
     reasoning: decision.reasoning || "Proceeding with pedagogical flow"
   };
 
+  if (analysis) {
+    if (typeof analysis.updatedWeaknessScore === 'number') {
+      currentTopic.weaknessScore = Math.max(1, Math.min(5, analysis.updatedWeaknessScore));
+    } else {
+      if (analysis.correctness === "Correct") {
+        currentTopic.weaknessScore = Math.max(1, currentTopic.weaknessScore - 1);
+      } else if (analysis.correctness === "Incorrect") {
+        currentTopic.weaknessScore = Math.min(5, currentTopic.weaknessScore + 1);
+      }
+    }
+  }
+
   const evaluations = [...(session.evaluations || []), analysis.correctness];
 
   if (decision.action === "follow_up") {
