@@ -1,9 +1,54 @@
 function candidateSummary(candidate) {
   const m = candidate.member || {};
+  
+  // Calculate skills, technologies, weak areas
+  const roleSkills = {
+    "AI Engineer": "LLMs, RAG, Python, Prompting, Multi-Agent Systems",
+    "Data Engineer": "Data Pipelines, ETL, Spark, SQL, Big Data",
+    "Senior Data Engineer": "Data Pipelines, ETL, Spark, SQL, Observability",
+    "Backend Software Engineer": "Node.js, Express, SQL, API Integration, Docker",
+    "DevOps Engineer": "CI/CD, Kubernetes, Docker, Terraform, Telemetry",
+    "Architect": "Cloud Architecture, System Design, Security, Scalability",
+    "Business Analyst": "Requirement Elicitation, Agile, SQL, Data Analysis"
+  };
+  const primarySkills = roleSkills[m.jobRole] || "Software Engineering, Python, Git";
+
+  const tech = [];
+  (candidate.missions || []).forEach(miss => {
+    if (miss.passed) {
+      if (miss.title.includes("Embeddings") || miss.title.includes("Vector")) tech.push("ChromaDB", "pgvector");
+      if (miss.title.includes("Retrieval") || miss.title.includes("RAG")) tech.push("LangChain", "LlamaIndex");
+      if (miss.title.includes("API") || miss.title.includes("Backend")) tech.push("FastAPI", "REST");
+      if (miss.title.includes("Docker") || miss.title.includes("Deployment")) tech.push("Docker", "Kubernetes");
+      if (miss.title.includes("MCP")) tech.push("MCP");
+      if (miss.title.includes("Agent") || miss.title.includes("Orchestration")) tech.push("LangGraph");
+    }
+  });
+  const keyTechnologies = [...new Set(tech)].slice(0, 4).join(", ") || "Python, Git";
+
+  const weak = [];
+  (candidate.missions || []).forEach(miss => {
+    if (miss.skipped) {
+      weak.push(`${miss.title} (Skipped)`);
+    } else if (miss.attempts >= 4) {
+      weak.push(`${miss.title} (${miss.attempts} tries)`);
+    }
+  });
+  const weakAreas = weak.length > 0 ? weak.join(", ") : "None detected";
+
+  const missionsSummary = (candidate.missions || []).map(miss => {
+    return `- ${miss.title}: ${miss.skipped ? "Skipped" : `Passed in ${miss.attempts} attempt(s)`}`;
+  }).join("\n");
+
   return `Name: ${m.name}
 Role: ${m.jobRole}
 Experience: ${m.yearsExperience} years
-Education: ${m.education}`;
+Education: ${m.education}
+Primary Skills: ${primarySkills}
+Key Technologies: ${keyTechnologies}
+Current Weak Areas: ${weakAreas}
+Missions Curriculum History:
+${missionsSummary}`;
 }
 
 function planSummary(plan) {
@@ -113,15 +158,28 @@ ${transcript.map((t) => `${t.role === "assistant" ? "INTERVIEWER" : "CANDIDATE"}
 Write the final feedback. Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly this shape:
 
 {
-  "decision": "PASSED" | "FAILED",
-  "summary": "2-3 sentence overall assessment detailing the result of the interview",
-  "conceptUnderstanding": "Detailed evaluation of the candidate's understanding of technical concepts across the curriculum. If they exited early (Completion Percentage < 90%), you MUST explicitly state that the interview was incomplete/terminated early and explain the reason based on the transcript.",
-  "reasoningQuality": "Detailed evaluation of the candidate's reasoning, problem-solving depth, and trade-off analysis",
-  "consistencyScore": "${stats ? stats.consistencyScore || stats.technicalScore : 'X'}/100 (a quantitative consistency score representing answer coherence)",
-  "strongTopics": ["list of topics where they demonstrated clear mastery", "..."],
-  "weakTopics": ["list of topics where their understanding was shallow, incorrect, or missing", "..."],
-  "personalizedSuggestions": ["actionable, specific recommendations on exactly what topics they need to study to improve", "..."]
+  "overallScore": 50, // overall numerical score out of 100 based on their performance
+  "scoreLabel": "Satisfactory Performance", // overall label: e.g. "Excellent Performance", "Satisfactory Performance", "Needs Improvement", or "Unsatisfactory Performance"
+  "recommendation": "Recommended" | "Maybe Recommended" | "Not Recommended",
+  "executiveSummary": "A concise final assessment explaining: 1) overall candidate performance, 2) technical strengths, 3) major weaknesses, 4) how well the candidate matched the role, and 5) whether they demonstrated sufficient technical knowledge.",
+  "topicBreakdown": [
+    {
+      "topicName": "Topic Name",
+      "score": 7, // score out of 10
+      "explanation": "Short explanation based on the candidate's actual answer"
+    }
+  ],
+  "strengths": [
+    "Demonstrated strong understanding of...",
+    "Clearly explained...",
+    "Correctly applied..."
+  ],
+  "areasForGrowth": [
+    "Weak understanding of...",
+    "Unable to explain...",
+    "Missing knowledge of..."
+  ]
 }
 
-Weight your assessment toward the topics with higher weakness scores and skipped topics. Be specific and reference actual moments from the transcript. If the candidate exited early, reflect this in the decision, status, and explain it clearly in the report.`;
+Be specific and reference actual moments from the transcript. If the candidate exited early, reflect this in the decision, overallScore, status, and explain it clearly in the executiveSummary.`;
 }

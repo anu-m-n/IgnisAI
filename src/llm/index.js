@@ -126,6 +126,23 @@ function mockLLMResponse({ systemPrompt, messages }) {
       ];
     }
 
+    const overallScore = decision === "FAILED" ? 15 : 85;
+    const scoreLabel = decision === "FAILED" ? "Unsatisfactory Performance" : "Excellent Performance";
+    const recommendation = decision === "FAILED" ? "Not Recommended" : "Recommended";
+    const executiveSummary = `${summary}\n\nConcept Understanding: ${conceptUnderstanding}\n\nReasoning Quality: ${reasoningQuality}`;
+    const strengths = strongTopics.map(t => `Demonstrated understanding of ${t}`);
+    const areasForGrowth = weakTopics.map(t => `Weak understanding of ${t}`);
+    const topicBreakdown = (strongTopics.concat(weakTopics)).map((t, idx) => {
+      const isStrong = idx < strongTopics.length;
+      return {
+        topicName: t,
+        score: isStrong ? 9 : 2,
+        explanation: isStrong 
+          ? `Candidate demonstrated clear proficiency and answered questions about ${t} accurately.`
+          : `Candidate struggled to explain core concepts related to ${t} and provided generic responses.`
+      };
+    });
+
     return JSON.stringify({
       decision,
       summary,
@@ -134,7 +151,14 @@ function mockLLMResponse({ systemPrompt, messages }) {
       consistencyScore,
       strongTopics,
       weakTopics,
-      personalizedSuggestions
+      personalizedSuggestions,
+      overallScore,
+      scoreLabel,
+      recommendation,
+      executiveSummary,
+      topicBreakdown,
+      strengths,
+      areasForGrowth
     }, null, 2);
   }
 
