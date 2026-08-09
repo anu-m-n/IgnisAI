@@ -183,17 +183,33 @@ ${missedSummaryText}
 FULL TRANSCRIPT
 ${transcript.map((t) => `${t.role === "assistant" ? "INTERVIEWER" : "CANDIDATE"}: ${t.content}`).join("\n")}
 
+STRICT SCORING RULES — YOU MUST FOLLOW THESE EXACTLY:
+1. NEVER use 85 as a default score. The score MUST be calculated from actual performance.
+2. Calculate "overallScore" using this formula:
+   - Start with the technicalScore from stats: ${stats?.technicalScore ?? 0}%
+   - Adjust based on completion: if completionPercentage < 50%, cap overallScore at 40.
+   - If the candidate answered 0 questions or just said "I don't know" to everything, overallScore MUST be 0–20.
+   - If completionPercentage is 0%, overallScore MUST be 0.
+   - If candidate answered partial questions with mix of correct/incorrect, score should be between 30–65.
+   - Only give scores above 75 if the candidate demonstrated genuine understanding in most topics.
+   - A candidate who did not attend or responded with "I don't know" to all questions MUST receive a score of 5–15.
+3. "recommendation" MUST follow from the score:
+   - Score >= 75: "Recommended"
+   - Score 50–74: "Maybe Recommended"
+   - Score < 50: "Not Recommended"
+4. Be honest. Do not inflate scores. Reference actual transcript answers.
+
 Write the final feedback. Respond with ONLY a JSON object (no markdown fences, no extra text) in exactly this shape:
 
 {
-  "overallScore": 85, // overall numerical score out of 100 based on performance
-  "scoreLabel": "Excellent Performance", // "Excellent Performance", "Satisfactory Performance", "Needs Improvement", or "Unsatisfactory Performance"
+  "overallScore": <integer 0-100, calculated from actual performance — DO NOT use 85 as default>,
+  "scoreLabel": "Excellent Performance" | "Satisfactory Performance" | "Needs Improvement" | "Unsatisfactory Performance",
   "recommendation": "Recommended" | "Maybe Recommended" | "Not Recommended",
   "executiveSummary": "A concise final assessment explaining: 1) overall candidate performance, 2) technical strengths, 3) key weaknesses or missed concepts, 4) how well candidate matched the applied position (${candidate.member?.jobRole}), and 5) hiring verdict.",
   "topicBreakdown": [
     {
       "topicName": "Topic Name",
-      "score": 8, // score out of 10
+      "score": <integer 0-10, based on actual answers for this topic — 0 if not answered at all>,
       "explanation": "Short explanation based on the candidate's actual answers"
     }
   ],
@@ -214,5 +230,6 @@ Write the final feedback. Respond with ONLY a JSON object (no markdown fences, n
   ]
 }
 
-Be specific and reference actual moments from the transcript. If candidate exited early, reflect this in overallScore, status, and executiveSummary.`;
+Be specific and reference actual moments from the transcript. If candidate exited early or provided no answers, reflect this honestly in overallScore (must be low), status, and executiveSummary.`;
 }
+

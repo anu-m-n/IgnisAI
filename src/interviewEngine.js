@@ -50,7 +50,9 @@ export function calculateSessionStats(session) {
   const questionsAnswered = transcript.filter(t => t.role === "user").length;
   const questionsSkipped = Math.max(0, totalQuestions - questionsAnswered);
 
-  const completionPercentage = Math.round((questionsAnswered / totalQuestions) * 100);
+  const completionPercentage = totalQuestions > 0
+    ? Math.round((questionsAnswered / totalQuestions) * 100)
+    : 0;
 
   const evaluatedCount = evaluations.length;
   let technicalScore = 0;
@@ -90,6 +92,47 @@ export function calculateSessionStats(session) {
     durationStr,
     status
   };
+}
+
+/**
+ * Deterministically calculate final score from actual evaluation data.
+ * This overrides whatever the LLM returns to prevent hallucinated scores.
+ */
+export function calcFinalScore(stats) {
+  if (!stats || stats.questionsAnswered === 0) return 0;
+
+  const techScore = stats.technicalScore;       // 0-100, based only on correct/partial/incorrect evaluations
+  const completion = stats.completionPercentage; // 0-100
+
+  // Apply completion penalty: incomplete interviews score lower
+  if (completion >= 90) return techScore;
+  if (completion >= 70) return Math.round(techScore * 0.90);
+  if (completion >= 50) return Math.round(techScore * 0.78);
+  if (completion >= 30) return Math.round(techScore * 0.60);
+  if (completion >= 10) return Math.round(techScore * 0.40);
+  return Math.round(techScore * 0.20);
+}
+
+/**
+ * Override the LLM-generated feedback fields with programmatically correct values.
+ * The LLM frequently hallucinates scores (e.g. always returning 85).
+ * We trust our own evaluation data over the LLM's number.
+ */
+export function overrideFeedbackScore(feedback, stats) {
+  const score = calcFinalScore(stats);
+
+  feedback.overallScore = score;
+
+  if (score >= 80) feedback.scoreLabel = "Excellent Performance";
+  else if (score >= 60) feedback.scoreLabel = "Satisfactory Performance";
+  else if (score >= 40) feedback.scoreLabel = "Needs Improvement";
+  else feedback.scoreLabel = "Unsatisfactory Performance";
+
+  if (score >= 75) feedback.recommendation = "Recommended";
+  else if (score >= 50) feedback.recommendation = "Maybe Recommended";
+  else feedback.recommendation = "Not Recommended";
+
+  return feedback;
 }
 
 export async function startInterview(candidate) {
@@ -316,6 +359,10 @@ export async function handleTurn(session, candidateMessage, answerDurationMs) {
       feedback.missedConcepts = missedConcepts;
     }
 
+    // IMPORTANT: Override LLM score with deterministic calculation from actual evaluations
+    // The LLM frequently hallucinates scores regardless of prompt instructions
+    overrideFeedbackScore(feedback, stats);
+
     if (feedback.consistencyScore) {
       stats.consistencyScore = feedback.consistencyScore;
     }
@@ -381,6 +428,10 @@ export async function forceConcludeInterview(session) {
   }
 
   const finalStats = calculateSessionStats({ ...session, done: true, evaluations });
+
+  // IMPORTANT: Override LLM score with deterministic calculation from actual evaluations
+  overrideFeedbackScore(feedback, finalStats);
+
   if (feedback.consistencyScore) {
     finalStats.consistencyScore = feedback.consistencyScore;
   }
@@ -390,5 +441,6 @@ export async function forceConcludeInterview(session) {
     reply: "Interview concluded early by candidate request.",
     done: true,
     feedback,
+    stats: finalStats,
   };
 }
