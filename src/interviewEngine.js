@@ -4,6 +4,30 @@ import { openingSystemPrompt, turnDecisionSystemPrompt, feedbackSystemPrompt } f
 import { INITIAL_DIFFICULTY, nextDifficulty } from "./difficultyEngine.js";
 import { parseJsonLoose } from "./util.js";
 
+export function isDontKnow(message) {
+  if (!message) return false;
+  const msg = message.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+  const phrases = [
+    "i dont know",
+    "i dont know this",
+    "i have no idea",
+    "im not sure",
+    "i cant answer that",
+    "i dont remember",
+    "no idea",
+    "i havent learned this",
+    "dont know",
+    "not sure",
+    "no clue",
+    "cant remember",
+    "i do not know",
+    "i do not know this",
+    "i can not answer that",
+    "i have not learned this"
+  ];
+  return phrases.some(p => msg === p || msg.includes(p));
+}
+
 export function calculateSessionStats(session) {
   const plan = session.plan || [];
   const transcript = session.transcript || [];
@@ -124,9 +148,24 @@ export async function handleTurn(session, candidateMessage) {
     reasoning: decision.reasoning || "Proceeding with pedagogical flow"
   };
 
+  // Safeguard Override for "I don't know" / DOES_NOT_KNOW answers
+  if (isDontKnow(candidateMessage)) {
+    analysis.correctness = "Incorrect";
+    analysis.responseClassification = "DOES_NOT_KNOW";
+    analysis.updatedWeaknessScore = 5;
+    
+    // Check if the LLM generated a follow-up by mistake
+    const qLower = (decision.question || "").toLowerCase();
+    if (qLower.includes("expand") || qLower.includes("applied") || qLower.includes("detail") || qLower.includes("dive deeper") || qLower.includes("how did you")) {
+      // Force transition to diagnostic question
+      decision.decision = "Diagnostic question";
+      decision.question = `No problem. Let's try a simpler one. What is the basic purpose of ${currentTopic.title}?`;
+    }
+  }
+
   if (analysis) {
-    if (typeof analysis.updatedWeaknessScore === 'number') {
-      currentTopic.weaknessScore = Math.max(1, Math.min(5, analysis.updatedWeaknessScore));
+    if (typeof analysis.updatedWeaknessScore === 'number' || isDontKnow(candidateMessage)) {
+      currentTopic.weaknessScore = isDontKnow(candidateMessage) ? 5 : Math.max(1, Math.min(5, analysis.updatedWeaknessScore));
     } else {
       if (analysis.correctness === "Correct") {
         currentTopic.weaknessScore = Math.max(1, currentTopic.weaknessScore - 1);

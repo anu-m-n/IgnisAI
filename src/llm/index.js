@@ -201,6 +201,17 @@ function mockLLMResponse({ systemPrompt, messages }) {
     const candidateRole = roleMatch ? roleMatch[1].trim() : "Software Engineer";
 
     // Check features of answer
+    const isDontKnowAnswer = lastCandidateAnswer.toLowerCase().includes("don't know") ||
+                             lastCandidateAnswer.toLowerCase().includes("dont know") ||
+                             lastCandidateAnswer.toLowerCase().includes("no idea") ||
+                             lastCandidateAnswer.toLowerCase().includes("not sure") ||
+                             lastCandidateAnswer.toLowerCase().includes("don't remember") ||
+                             lastCandidateAnswer.toLowerCase().includes("dont remember") ||
+                             lastCandidateAnswer.toLowerCase().includes("can't answer") ||
+                             lastCandidateAnswer.toLowerCase().includes("cant answer") ||
+                             lastCandidateAnswer.toLowerCase().includes("haven't learned") ||
+                             lastCandidateAnswer.toLowerCase().includes("havent learned");
+
     const isBoilerplate = lastCandidateAnswer.toLowerCase().includes("i'd approach it by breaking the problem down") ||
                           lastCandidateAnswer.toLowerCase().includes("validate with tests") ||
                           lastCandidateAnswer.toLowerCase().includes("break down the problem");
@@ -217,7 +228,27 @@ function mockLLMResponse({ systemPrompt, messages }) {
     let action = "follow_up";
     let question = "";
 
-    if (isBoilerplate) {
+    if (isDontKnowAnswer) {
+      correctness = "Incorrect";
+      misconception = "Candidate stated they do not know the concept.";
+      
+      // If we are already beyond the diagnostic turn (e.g. questionsAsked >= 1), transition to next topic.
+      if (questionsAsked >= 1) {
+        if (nextTopic) {
+          decision = "Next topic transition";
+          action = "next_topic";
+          question = `No problem. Let's move to another area: "${nextTopic.title}". Can you give me an overview of your experience with this?`;
+        } else {
+          decision = "Interview completion";
+          action = "next_topic";
+          question = `Thank you, ${candidateName}. Those were all the questions I had for today. You did a great job walking me through your experience!`;
+        }
+      } else {
+        decision = "Diagnostic question";
+        action = "follow_up";
+        question = `No problem. Let's try a simpler one. What is the basic purpose of ${currentTopicTitle}?`;
+      }
+    } else if (isBoilerplate) {
       correctness = "Incorrect";
       misconception = "Candidate relies on a generic problem-solving framework and avoids answering the specific technical details.";
       if (questionsAsked >= 2) {
