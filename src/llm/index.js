@@ -200,44 +200,118 @@ function mockLLMResponse({ systemPrompt, messages }) {
     const roleMatch = systemPrompt.match(/Applied Position:\s*([^\n]+)/i) || systemPrompt.match(/Candidate's applied position:\s*([^\n]+)/i);
     const candidateRole = roleMatch ? roleMatch[1].trim() : "Software Engineer";
 
-    // Check features of answer
-    const isDontKnowAnswer = lastCandidateAnswer.toLowerCase().includes("don't know") ||
-                             lastCandidateAnswer.toLowerCase().includes("dont know") ||
-                             lastCandidateAnswer.toLowerCase().includes("no idea") ||
-                             lastCandidateAnswer.toLowerCase().includes("not sure") ||
-                             lastCandidateAnswer.toLowerCase().includes("don't remember") ||
-                             lastCandidateAnswer.toLowerCase().includes("dont remember") ||
-                             lastCandidateAnswer.toLowerCase().includes("can't answer") ||
-                             lastCandidateAnswer.toLowerCase().includes("cant answer") ||
-                             lastCandidateAnswer.toLowerCase().includes("haven't learned") ||
-                             lastCandidateAnswer.toLowerCase().includes("havent learned");
+    const ansLower = lastCandidateAnswer.toLowerCase().trim().replace(/['’"”]/g, "");    function getTopicKeywords(title) {
+      const t = title.toLowerCase();
+      if (t.includes("monitoring") || t.includes("logging") || t.includes("observability")) {
+        return ["prometheus", "log", "metric", "trace", "grafana", "kibana", "telemetry", "observability", "alert", "elk", "loki"];
+      }
+      if (t.includes("prompt")) {
+        return ["prompt", "few-shot", "zero-shot", "system prompt", "temperature", "llm", "instruction", "output format"];
+      }
+      if (t.includes("docker") || t.includes("kubernetes") || t.includes("deployment")) {
+        return ["docker", "kubernetes", "k8s", "container", "pod", "deployment", "image", "dockerfile", "yaml", "helm"];
+      }
+      if (t.includes("embeddings")) {
+        return ["embedding", "vector", "semantic", "cosine", "similarity", "dimension", "distance", "representation"];
+      }
+      if (t.includes("vector database") || t.includes("chromadb") || t.includes("pgvector")) {
+        return ["vector", "chroma", "pgvector", "pinecone", "database", "index", "hnsw", "similarity", "query"];
+      }
+      if (t.includes("retrieval") || t.includes("matching")) {
+        return ["retrieval", "retrieve", "query", "search", "chunk", "overlap", "rerank", "hybrid"];
+      }
+      if (t.includes("mcp") || t.includes("model context")) {
+        return ["mcp", "protocol", "server", "client", "tool", "resource", "schema", "context"];
+      }
+      if (t.includes("agent") || t.includes("orchestration")) {
+        return ["agent", "orchestration", "langgraph", "langchain", "crewai", "autogen", "state", "loop", "routing"];
+      }
+      if (t.includes("backend") || t.includes("api") || t.includes("integration")) {
+        return ["api", "backend", "express", "node", "fastapi", "endpoint", "rest", "json", "cors", "route"];
+      }
+      return ["code", "software", "development", "architecture", "system"];
+    }
 
-    const isBoilerplate = lastCandidateAnswer.toLowerCase().includes("i'd approach it by breaking the problem down") ||
-                          lastCandidateAnswer.toLowerCase().includes("validate with tests") ||
-                          lastCandidateAnswer.toLowerCase().includes("break down the problem");
-    const isVeryShort = lastCandidateAnswer.trim().length > 0 && lastCandidateAnswer.trim().length < 40;
-    const hasTechKeywords = [
-      "prometheus", "log", "metric", "trace", "python", "docker", "kubernetes", "k8s",
+    const topicKeywords = getTopicKeywords(currentTopicTitle);
+    const hasTopicKeywords = topicKeywords.some(kw => ansLower.includes(kw));
+    const matchedTopicKeywords = topicKeywords.filter(kw => ansLower.includes(kw));
+
+    const otherTechKeywords = [
+      "prometheus", "log", "metric", "trace", "docker", "kubernetes", "k8s",
       "embedding", "vector", "prompt", "few-shot", "mcp", "agent", "retrieve", "matching",
-      "fastapi", "react", "latency", "scale", "health", "security", "guardrail", "eval"
-    ].some(kw => lastCandidateAnswer.toLowerCase().includes(kw));
+      "fastapi", "react", "css", "layout", "styling", "compile", "html"
+    ].filter(kw => !topicKeywords.includes(kw));
+    const hasOtherKeywords = otherTechKeywords.some(kw => ansLower.includes(kw));
+    const isOffTopic = hasOtherKeywords && !hasTopicKeywords && ansLower.length > 25;
+
+    // 2. Classify response types
+    const isDontKnowAnswer = ansLower === "i dont know" ||
+                             ansLower === "i have no idea" ||
+                             ansLower === "im not sure" ||
+                             ansLower === "i dont remember" ||
+                             ansLower === "no idea" ||
+                             ansLower === "no clue" ||
+                             ansLower === "cant remember" ||
+                             ansLower === "i do not know" ||
+                             ansLower.includes("don't know") ||
+                             ansLower.includes("dont know") ||
+                             ansLower.includes("not sure") ||
+                             ansLower.includes("cant answer") ||
+                             ansLower.includes("dont remember") ||
+                             ansLower.includes("no idea");
+
+    const insufficientWords = ["yes", "yeah", "okay", "ok", "correct", "no", "sure", "fine", "not really", "maybe", "yep", "yup"];
+    const isInsufficient = insufficientWords.includes(ansLower) || ansLower.length < 6;
+
+    // Claims without evidence, e.g. "yes I used it", "yeah I did", "yes I did that on my project", "I have used it"
+    const isClaimOnly = (ansLower.startsWith("yes ") || ansLower.startsWith("yeah ") || ansLower.includes("used it") || ansLower.includes("have used") || ansLower.includes("did that")) &&
+                        ansLower.length < 40 &&
+                        !hasTopicKeywords;
+
+    const isBoilerplate = ansLower.includes("i dont know") === false && (
+                          ansLower.includes("i'd approach it by breaking the problem down") ||
+                          ansLower.includes("validate with tests") ||
+                          ansLower.includes("break down the problem") ||
+                          ansLower.includes("test everything"));
+
+    const isStrongDetailed = matchedTopicKeywords.length >= 2 && ansLower.length > 80;
+
+    // Incorrect concepts match
+    let isIncorrectContent = isOffTopic;
+    if (currentTopicTitle.toLowerCase().includes("embedding")) {
+      if (ansLower.includes("compile") || ansLower.includes("layout") || ansLower.includes("style")) {
+        isIncorrectContent = true;
+      }
+    }
+    if (currentTopicTitle.toLowerCase().includes("docker")) {
+      if (ansLower.includes("layout") || ansLower.includes("styling") || ansLower.includes("css") || ansLower.includes("component")) {
+        isIncorrectContent = true;
+      }
+    }
 
     let correctness = "Correct";
+    let responseClassification = "KNOWLEDGE_DEMONSTRATED";
     let misconception = "none";
     let decision = "Deeper follow-up";
     let action = "follow_up";
     let question = "";
+    let updatedWeaknessScore = 2;
+    let conceptExplanation = "none";
+    let missedConceptSummary = "none";
 
     if (isDontKnowAnswer) {
       correctness = "Incorrect";
+      responseClassification = "DOES_NOT_KNOW";
       misconception = "Candidate stated they do not know the concept.";
+      updatedWeaknessScore = 5;
+      missedConceptSummary = `Core technical principles of ${currentTopicTitle}`;
+      conceptExplanation = `In production architectures, ${currentTopicTitle} requires precise component orchestration, telemetry monitoring, and explicit configuration parameters rather than high-level generic statements.`;
       
-      // If we are already beyond the diagnostic turn (e.g. questionsAsked >= 1), transition to next topic.
       if (questionsAsked >= 1) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `Let's move to the next topic in our plan: "${nextTopic.title}". Can you give me an overview of your experience with this?`;
+          question = `Understood. Let's transition to our next topic: "${nextTopic.title}". Can you describe your experience with this?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
@@ -246,11 +320,46 @@ function mockLLMResponse({ systemPrompt, messages }) {
       } else {
         decision = "Diagnostic question";
         action = "follow_up";
-        question = `What is the basic purpose of ${currentTopicTitle}?`;
+        question = `No worries. Let's try a simpler one: what is the basic purpose of ${currentTopicTitle} in a system architecture?`;
       }
+    } else if (isInsufficient) {
+      correctness = "Incorrect";
+      responseClassification = "INCORRECT";
+      misconception = "Candidate answer is empty or provides no technical context.";
+      updatedWeaknessScore = 4;
+      missedConceptSummary = `Core technical principles of ${currentTopicTitle}`;
+      conceptExplanation = `In production architectures, ${currentTopicTitle} requires precise component orchestration, telemetry monitoring, and explicit configuration parameters rather than high-level generic statements.`;
+      decision = "Diagnostic question";
+      action = "follow_up";
+      question = `I see. To help me verify your actual knowledge: could you explain what ${currentTopicTitle} is and what core problem it solves?`;
+    } else if (isClaimOnly) {
+      correctness = "Partial";
+      responseClassification = "NEEDS_VERIFICATION";
+      misconception = "Candidate claims experience but offers no technical evidence or specific examples.";
+      updatedWeaknessScore = 4;
+      missedConceptSummary = `Practical implementation depth in ${currentTopicTitle}`;
+      conceptExplanation = `When discussing ${currentTopicTitle}, it is essential to detail the exact schema, tool parameters, or architectural trade-offs applied in your workflow.`;
+      decision = "Diagnostic question";
+      action = "follow_up";
+      question = `You mentioned that you implemented it. What specific type of data did you process, and how did you configure ${currentTopicTitle} in your project?`;
+    } else if (isIncorrectContent) {
+      correctness = "Incorrect";
+      responseClassification = "INCORRECT";
+      misconception = "Candidate conflated the active topic with incorrect technical domains.";
+      updatedWeaknessScore = 5;
+      missedConceptSummary = `Core technical principles of ${currentTopicTitle}`;
+      conceptExplanation = `In production architectures, ${currentTopicTitle} requires precise component orchestration, telemetry monitoring, and explicit configuration parameters rather than high-level generic statements.`;
+      decision = "Diagnostic question";
+      action = "follow_up";
+      question = `It sounds like there might be a slight mix-up in how that concept works. Let's clarify: how does ${currentTopicTitle} relate to the core data flow in your backend, and what is its primary responsibility?`;
     } else if (isBoilerplate) {
       correctness = "Incorrect";
+      responseClassification = "VAGUE";
       misconception = "Candidate relies on a generic problem-solving framework and avoids answering the specific technical details.";
+      updatedWeaknessScore = 4;
+      missedConceptSummary = `Core technical principles of ${currentTopicTitle}`;
+      conceptExplanation = `In production architectures, ${currentTopicTitle} requires precise component orchestration, telemetry monitoring, and explicit configuration parameters rather than high-level generic statements.`;
+      
       if (questionsAsked >= 2) {
         if (nextTopic) {
           decision = "Next topic transition";
@@ -259,51 +368,38 @@ function mockLLMResponse({ systemPrompt, messages }) {
         } else {
           decision = "Interview completion";
           action = "next_topic";
-          question = `Thank you, ${candidateName}! That covers all our technical modules today. You've walked through several core engineering trade-offs with me!`;
+          question = `Thank you, ${candidateName}! That covers all our technical modules today.`;
         }
       } else {
         decision = "Diagnostic question";
         action = "follow_up";
         question = `I hear what you're saying about breaking down problems, but let's look at the actual technical mechanics. For ${currentTopicTitle}, what specific tools or code structures do you use?`;
       }
-    } else if (isVeryShort) {
-      correctness = "Partial";
-      misconception = "Superficial answer lacking concrete technical evidence or examples.";
-      if (questionsAsked >= 2) {
+    } else if (isStrongDetailed) {
+      correctness = "Correct";
+      responseClassification = "STRONG_UNDERSTANDING";
+      updatedWeaknessScore = 1;
+      
+      if (questionsAsked >= budget) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `Got it. Let's transition to our next core topic: "${nextTopic.title}". From your experience as a ${candidateRole}, can you outline your approach here?`;
+          question = `That is an excellent, detailed explanation of your implementation. Let's transition to "${nextTopic.title}". In your role as a ${candidateRole}, how do you approach system design for this?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
-          question = `Thank you, ${candidateName}! That concludes our technical assessment session. Appreciate you sharing your insights!`;
+          question = `Excellent work, ${candidateName}! That completes all our technical assessment modules for today.`;
         }
       } else {
-        decision = "Clarification follow-up";
+        decision = "Deeper follow-up";
         action = "follow_up";
-        question = `That gives a high-level picture. Could you expand on how you applied this as a ${candidateRole}? What specific configuration or library calls were involved?`;
+        question = `That is an excellent point regarding production behavior. Diving deeper, as a ${candidateRole}, how do you handle edge cases and scale limits with ${currentTopicTitle}?`;
       }
-    } else if (!hasTechKeywords && lastCandidateAnswer.trim().length > 0) {
-      correctness = "Incorrect";
-      misconception = "Candidate gives generic confirmation/claims of implementation but lacks specific technical terminology.";
-      if (questionsAsked >= 2) {
-        if (nextTopic) {
-          decision = "Next topic transition";
-          action = "next_topic";
-          question = `Fair observation. Let's move on to "${nextTopic.title}". What key architectural considerations do you prioritize when building for this?`;
-        } else {
-          decision = "Interview completion";
-          action = "next_topic";
-          question = `Thank you, ${candidateName}! That completes all the planned technical evaluation topics today!`;
-        }
-      } else {
-        decision = "Diagnostic question";
-        action = "follow_up";
-        question = `I see your point, but let's touch on the foundational principles. What core problem does ${currentTopicTitle} solve in a ${candidateRole} workflow?`;
-      }
-    } else {
-      // Correct technical response!
+    } else if (hasTopicKeywords) {
+      correctness = "Correct";
+      responseClassification = "KNOWLEDGE_DEMONSTRATED";
+      updatedWeaknessScore = 2;
+      
       if (questionsAsked >= budget) {
         if (nextTopic) {
           decision = "Next topic transition";
@@ -317,32 +413,41 @@ function mockLLMResponse({ systemPrompt, messages }) {
       } else {
         decision = "Deeper follow-up";
         action = "follow_up";
-        question = `That's a great point regarding production behavior. Diving deeper, as a ${candidateRole}, how do you handle edge cases and scale limits with ${currentTopicTitle}?`;
+        question = `That is a correct definition. From a practical engineering standpoint, how or where would you configure and retrieve these ${currentTopicTitle} in a production-ready application?`;
       }
-    }
-
-    let updatedWeaknessScore = 3;
-    let conceptExplanation = "none";
-    let missedConceptSummary = "none";
-
-    if (correctness === "Correct") {
-      updatedWeaknessScore = 2;
-    } else if (correctness === "Incorrect") {
-      updatedWeaknessScore = 5;
-      missedConceptSummary = `Core technical principles of ${currentTopicTitle}`;
-      conceptExplanation = `In production architectures, ${currentTopicTitle} requires precise component orchestration, telemetry monitoring, and explicit configuration parameters rather than high-level generic statements.`;
-    } else if (correctness === "Partial") {
-      updatedWeaknessScore = 4;
+    } else {
+      // Vague, short, or generic responses (no technical keywords, medium/short length)
+      correctness = "Partial";
+      responseClassification = "VAGUE";
+      misconception = "Superficial answer lacking concrete technical evidence or examples.";
+      updatedWeaknessScore = 3;
       missedConceptSummary = `Practical implementation depth in ${currentTopicTitle}`;
       conceptExplanation = `When discussing ${currentTopicTitle}, it is essential to detail the exact schema, tool parameters, or architectural trade-offs applied in your workflow.`;
+      
+      if (questionsAsked >= 2) {
+        if (nextTopic) {
+          decision = "Next topic transition";
+          action = "next_topic";
+          question = `Got it. Let's transition to our next core topic: "${nextTopic.title}". From your experience as a ${candidateRole}, can you outline your approach here?`;
+        } else {
+          decision = "Interview completion";
+          action = "next_topic";
+          question = `Thank you, ${candidateName}! That concludes our technical assessment session. Appreciate you sharing your insights!`;
+        }
+      } else {
+        decision = "Clarification follow-up";
+        action = "follow_up";
+        question = `That is a general overview. Could you expand on how you applied this as a ${candidateRole}? What specific configuration, parameters, or library calls were involved?`;
+      }
     }
 
     return JSON.stringify({
       analysis: {
         correctness,
+        responseClassification,
         misconception,
         decision,
-        reasoning: `Mock evaluation: Candidate answer detected as ${correctness}. Selecting pedagogical action: ${decision}.`,
+        reasoning: `Mock evaluation: Candidate answer classified as ${responseClassification} (${correctness}). Action: ${decision}.`,
         updatedWeaknessScore
       },
       conceptExplanation,

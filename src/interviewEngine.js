@@ -7,7 +7,7 @@ import { parseJsonLoose } from "./util.js";
 
 export function isDontKnow(message) {
   if (!message) return false;
-  const msg = message.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+  const msg = message.toLowerCase().trim().replace(/['’"”]/g, "").replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
   const phrases = [
     "i dont know",
     "i dont know this",
@@ -24,7 +24,19 @@ export function isDontKnow(message) {
     "i do not know",
     "i do not know this",
     "i can not answer that",
-    "i have not learned this"
+    "i have not learned this",
+    "no",
+    "nay",
+    "nope",
+    "not really",
+    "i dont have experience with this",
+    "i dont have experience",
+    "i haven't worked with this",
+    "i havent worked with this",
+    "i haven't worked with it",
+    "i havent worked with it",
+    "never used it",
+    "never worked with it"
   ];
   return phrases.some(p => msg === p || msg.includes(p));
 }
@@ -114,6 +126,42 @@ export async function startInterview(candidate) {
   };
 }
 
+export function generateNextTopicQuestion(candidate, nextTopic) {
+  const m = candidate.member || {};
+  const role = m.jobRole || "Engineer";
+  const name = m.name || "Candidate";
+  const title = nextTopic.title;
+
+  if (title.includes("Embeddings")) {
+    return `Let's move to our next module: "Embeddings Explained". As a ${role}, how would you approach converting textual data into vector embeddings, and what semantic search benefits does that provide?`;
+  }
+  if (title.includes("Vector Databases")) {
+    return `Let's transition to "Vector Databases Overview". In your projects, how would you store and query high-dimensional vectors, and what vector database index configurations (like HNSW) are relevant?`;
+  }
+  if (title.includes("Retrieval") || title.includes("Matching")) {
+    return `Let's shift focus to "Retrieval & Matching Engine". When building a retrieval system, how do you handle similarity queries, and what strategies do you use for chunking and overlap parameters?`;
+  }
+  if (title.includes("Prompt Engineering")) {
+    return `Let's move to "Prompt Engineering Fundamentals". For a production classification task, how do you design system prompts, and what is the difference between zero-shot and few-shot prompting?`;
+  }
+  if (title.includes("MCP") || title.includes("Model Context")) {
+    return `Let's transition to "Model Context Protocol (MCP)". How do you use the MCP framework to connect LLMs to external data sources, tools, and servers?`;
+  }
+  if (title.includes("Multi-Agent") || title.includes("Agent")) {
+    return `Let's move to "Multi-Agent Orchestration". How do you orchestrate multiple agents collaborating on a task, and how do you design state machines or routing rules using tools like LangGraph?`;
+  }
+  if (title.includes("Docker") || title.includes("Kubernetes") || title.includes("Deployment")) {
+    return `Let's transition to "Docker & Kubernetes Deployment". As a ${role}, how do you containerize your microservices, and how do you configure deployment manifests, replicas, and pod scheduling?`;
+  }
+  if (title.includes("Monitoring") || title.includes("Logging") || title.includes("Observability")) {
+    return `Let's move to "Monitoring, Logging & Observability". How do you instrument your backend for logging and telemetry metrics, and what tools (like Prometheus or Grafana) do you use to trace latency?`;
+  }
+  if (title.includes("API") || title.includes("Backend") || title.includes("Integration")) {
+    return `Let's transition to "Chatbot Backend & API Integration". How do you integrate an LLM streaming response into an Express or Node.js backend API, and what error-handling parameters do you configure?`;
+  }
+  return `Let's transition to "${title}". From your background in ${role}, how have you worked with this, and what is your overall approach?`;
+}
+
 export async function handleTurn(session, candidateMessage, answerDurationMs) {
   const { candidate, plan } = session;
   let currentIndex = session.currentIndex;
@@ -154,24 +202,45 @@ export async function handleTurn(session, candidateMessage, answerDurationMs) {
     : null;
   analysis.timing = timing;
 
-  // Safeguard Override for "I don't know" / DOES_NOT_KNOW answers
+  // Safeguard Override for "I don't know" / "No" / lack of knowledge answers
   if (isDontKnow(candidateMessage)) {
     analysis.correctness = "Incorrect";
     analysis.responseClassification = "DOES_NOT_KNOW";
     analysis.updatedWeaknessScore = 5;
     
-    // Check if the LLM generated a follow-up by mistake
-    const qLower = (decision.question || "").toLowerCase();
-    if (qLower.includes("expand") || qLower.includes("applied") || qLower.includes("detail") || qLower.includes("dive deeper") || qLower.includes("how did you")) {
+    // Immediately transition to next topic!
+    const nextTopic = plan[currentIndex + 1];
+    decision.action = "next_topic";
+    decision.decision = "Next topic transition";
+    if (nextTopic) {
+      decision.question = generateNextTopicQuestion(candidate, nextTopic);
+    } else {
+      decision.decision = "Interview completion";
+      decision.question = `Thank you, ${candidate.member?.name || 'Candidate'}. Those were all the questions I had for today.`;
+    }
+  }
+
+  // Safeguard: Budget exhaustion or repeated failure override
+  const isWeakAnswer = analysis.correctness === "Incorrect" || analysis.correctness === "Partial" || analysis.responseClassification === "VAGUE" || analysis.responseClassification === "NEEDS_VERIFICATION";
+  if (decision.action === "follow_up") {
+    // If budget is exhausted OR if we have asked 2 or more questions on this topic and candidate struggles, transition immediately!
+    if (currentTopic.questionsAsked >= currentTopic.questionBudget || (currentTopic.questionsAsked >= 2 && isWeakAnswer)) {
       const nextTopic = plan[currentIndex + 1];
+      decision.action = "next_topic";
+      decision.decision = "Next topic transition";
       if (nextTopic) {
-        decision.decision = "Next topic transition";
-        decision.question = `Let's move to the next area: ${nextTopic.title}. Can you explain your experience with this?`;
+        decision.question = generateNextTopicQuestion(candidate, nextTopic);
       } else {
         decision.decision = "Interview completion";
         decision.question = `Thank you, ${candidate.member?.name || 'Candidate'}. Those were all the questions I had for today.`;
       }
     }
+  }
+
+  // Avoid duplicate questions by checking transcript history
+  const askedQuestions = transcript.filter(t => t.role === "assistant").map(t => t.content.toLowerCase().trim());
+  if (decision.question && askedQuestions.includes(decision.question.toLowerCase().trim())) {
+    decision.question = decision.question + " Additionally, could you share a practical project scenario where you applied this?";
   }
 
   if (analysis) {
