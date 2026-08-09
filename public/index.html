@@ -2794,7 +2794,8 @@
 
       // Show a brief loading indicator on the button
       const btn = event?.currentTarget;
-      if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+      const origHtml = btn ? btn.innerHTML : '';
+      if (btn) { btn.innerHTML = 'Generating...'; btn.disabled = true; }
 
       // Temporarily apply light theme class for PDF export
       reportEl.classList.add('export-light-theme');
@@ -2803,18 +2804,18 @@
         margin:      [10, 10, 10, 10],
         filename:    filename,
         image:       { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollY: 0, scrollX: 0 },
         jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
+        pagebreak:   { mode: ['css', 'legacy'] }
       };
 
       html2pdf().set(opt).from(reportEl).save().then(() => {
         reportEl.classList.remove('export-light-theme');
-        if (btn) { btn.textContent = 'Download PDF Report'; btn.disabled = false; }
+        if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
       }).catch(err => {
         reportEl.classList.remove('export-light-theme');
         console.error('PDF generation failed:', err);
-        if (btn) { btn.textContent = 'Download PDF Report'; btn.disabled = false; }
+        if (btn) { btn.innerHTML = origHtml; btn.disabled = false; }
         alert('PDF generation failed. Please use the Print button instead.');
       });
     }
