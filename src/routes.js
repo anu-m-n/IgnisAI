@@ -20,7 +20,7 @@ router.get("/candidates", (req, res) => {
 // Handles both "start" (sessionId + candidate), "turn" (sessionId + message),
 // and "conclude" (sessionId + conclude: true) requests.
 router.post("/interview", async (req, res) => {
-  const { sessionId, candidate, message, conclude } = req.body || {};
+  const { sessionId, candidate, message, conclude, answerDurationMs } = req.body || {};
 
   if (!sessionId) {
     return res.status(400).json({ error: "sessionId is required" });
@@ -81,7 +81,7 @@ router.post("/interview", async (req, res) => {
       return res.status(400).json({ error: "message is required to continue an in-progress interview" });
     }
 
-    const result = await handleTurn(existing, message);
+    const result = await handleTurn(existing, message, answerDurationMs);
     updateSession(sessionId, result.state);
 
     const stats = calculateSessionStats(result.state);
