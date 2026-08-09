@@ -2,6 +2,7 @@ import { buildPlan } from "./planBuilder.js";
 import { callLLM } from "./llm/index.js";
 import { openingSystemPrompt, turnDecisionSystemPrompt, feedbackSystemPrompt } from "./promptBuilder.js";
 import { INITIAL_DIFFICULTY, nextDifficulty } from "./difficultyEngine.js";
+import { classifyDuration, timingLabel } from "./timingTracker.js";
 import { parseJsonLoose } from "./util.js";
 
 export function isDontKnow(message) {
@@ -113,7 +114,7 @@ export async function startInterview(candidate) {
   };
 }
 
-export async function handleTurn(session, candidateMessage) {
+export async function handleTurn(session, candidateMessage, answerDurationMs) {
   const { candidate, plan } = session;
   let currentIndex = session.currentIndex;
   const transcript = [...session.transcript, { role: "user", content: candidateMessage }];
@@ -147,6 +148,11 @@ export async function handleTurn(session, candidateMessage) {
     decision: decision.action === "follow_up" ? "Deeper follow-up" : "Next topic transition",
     reasoning: decision.reasoning || "Proceeding with pedagogical flow"
   };
+
+  const timing = answerDurationMs != null
+    ? { durationMs: answerDurationMs, classification: classifyDuration(answerDurationMs), label: timingLabel(classifyDuration(answerDurationMs)) }
+    : null;
+  analysis.timing = timing;
 
   // Safeguard Override for "I don't know" / DOES_NOT_KNOW answers
   if (isDontKnow(candidateMessage)) {

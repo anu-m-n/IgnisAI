@@ -2391,6 +2391,10 @@
       const container = document.getElementById('chat-messages');
       container.appendChild(msg);
       container.scrollTop = container.scrollHeight;
+
+      if (type === 'interviewer') {
+        window.__questionShownAt = Date.now();
+      }
     }
 
     function renderConceptRemediationCard(explanationText) {
@@ -2425,11 +2429,13 @@
       
       showTyping(true);
 
+      const answerDurationMs = window.__questionShownAt ? (Date.now() - window.__questionShownAt) : null;
+
       try {
         const response = await fetch('/api/interview', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ sessionId: currentSessionId, message: text })
+          body: JSON.stringify({ sessionId: currentSessionId, message: text, answerDurationMs })
         });
         if (!response.ok) throw new Error(await response.text());
         const data = await response.json();
@@ -2438,6 +2444,22 @@
         if (data.conceptExplanation) {
           renderConceptRemediationCard(data.conceptExplanation);
         }
+
+        const timing = data.timing || (data.analysis && data.analysis.timing);
+        if (timing) {
+          const candidateBubbles = document.querySelectorAll('#chat-messages .chat-msg.candidate');
+          const lastBubble = candidateBubbles[candidateBubbles.length - 1];
+          if (lastBubble) {
+            const metaWrapper = lastBubble.querySelector('.msg-content-wrapper');
+            if (metaWrapper) {
+              const timingEl = document.createElement('div');
+              timingEl.className = 'msg-meta';
+              timingEl.innerText = `⏱️ ${timing.label} (${(timing.durationMs / 1000).toFixed(1)}s)`;
+              metaWrapper.appendChild(timingEl);
+            }
+          }
+        }
+
         renderMessageBubble('Interviewer', data.reply, 'interviewer');
         processNextTurnState(data);
       } catch (err) {
