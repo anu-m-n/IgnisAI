@@ -157,9 +157,14 @@ export async function handleTurn(session, candidateMessage) {
     // Check if the LLM generated a follow-up by mistake
     const qLower = (decision.question || "").toLowerCase();
     if (qLower.includes("expand") || qLower.includes("applied") || qLower.includes("detail") || qLower.includes("dive deeper") || qLower.includes("how did you")) {
-      // Force transition to diagnostic question
-      decision.decision = "Diagnostic question";
-      decision.question = `No problem. Let's try a simpler one. What is the basic purpose of ${currentTopic.title}?`;
+      const nextTopic = plan[currentIndex + 1];
+      if (nextTopic) {
+        decision.decision = "Next topic transition";
+        decision.question = `Let's move to the next area: ${nextTopic.title}. Can you explain your experience with this?`;
+      } else {
+        decision.decision = "Interview completion";
+        decision.question = `Thank you, ${candidate.member?.name || 'Candidate'}. Those were all the questions I had for today.`;
+      }
     }
   }
 

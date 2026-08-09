@@ -237,7 +237,7 @@ function mockLLMResponse({ systemPrompt, messages }) {
         if (nextTopic) {
           decision = "Next topic transition";
           action = "next_topic";
-          question = `No problem. Let's move to another area: "${nextTopic.title}". Can you give me an overview of your experience with this?`;
+          question = `Let's move to the next topic in our plan: "${nextTopic.title}". Can you give me an overview of your experience with this?`;
         } else {
           decision = "Interview completion";
           action = "next_topic";
@@ -246,7 +246,7 @@ function mockLLMResponse({ systemPrompt, messages }) {
       } else {
         decision = "Diagnostic question";
         action = "follow_up";
-        question = `No problem. Let's try a simpler one. What is the basic purpose of ${currentTopicTitle}?`;
+        question = `What is the basic purpose of ${currentTopicTitle}?`;
       }
     } else if (isBoilerplate) {
       correctness = "Incorrect";
