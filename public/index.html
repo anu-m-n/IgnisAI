@@ -1216,6 +1216,9 @@
       padding-bottom: 0.75rem;
     }
 
+    .section-title-row.title-success { color: var(--success); }
+    .section-title-row.title-warning { color: var(--warning); }
+
     .exec-summary-text {
       font-size: 0.95rem;
       line-height: 1.7;
@@ -1483,6 +1486,12 @@
     .feedback-container.export-light-theme .audit-table .cell-explanation {
       color: #334155 !important;
     }
+    .feedback-container.export-light-theme .section-title-row.title-success {
+      color: #166534 !important;
+    }
+    .feedback-container.export-light-theme .section-title-row.title-warning {
+      color: #b45309 !important;
+    }
 
     /* Print / PDF Native Print Styles */
     @media print {
@@ -1534,6 +1543,8 @@
       }
       .report-doc-tag { color: #2563eb !important; }
       .exec-summary-text { border-left-color: #2563eb !important; background: #eff6ff !important; }
+      .section-title-row.title-success { color: #166534 !important; }
+      .section-title-row.title-warning { color: #b45309 !important; }
       .audit-table { border-color: #e2e8f0 !important; page-break-inside: avoid; }
       .audit-table th { background: #f1f5f9 !important; color: #475569 !important; border-bottom-color: #e2e8f0 !important; }
       .audit-table td { border-bottom-color: #f1f5f9 !important; }
@@ -3017,10 +3028,9 @@
           <!-- Missed Concepts Log Section -->
           ${(function() {
             const missed = feedback.missedConcepts || [];
-            if (missed.length === 0) return '';
             return `
               <div class="report-section" style="border-left: 4px solid var(--warning);">
-                <div class="section-title-row" style="color: var(--warning);">
+                <div class="section-title-row title-warning">
                   <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                   Missed Concepts & In-Flight Remediation Audit Log
                 </div>
@@ -3034,13 +3044,19 @@
                       </tr>
                     </thead>
                     <tbody>
-                      ${missed.map(mc => `
+                      ${missed.length > 0 ? missed.map(mc => `
                         <tr>
                           <td class="cell-topic">${mc.topic || 'General'}</td>
                           <td class="cell-concept">${mc.concept || 'Knowledge Gap'}</td>
                           <td class="cell-explanation">${mc.explanation || 'Remediation explanation provided during turn'}</td>
                         </tr>
-                      `).join('')}
+                      `).join('') : `
+                        <tr>
+                          <td colspan="3" class="cell-explanation" style="text-align: center; padding: 1.25rem; font-style: italic;">
+                            No missed concepts or knowledge gaps identified during this assessment session.
+                          </td>
+                        </tr>
+                      `}
                     </tbody>
                   </table>
                 </div>
@@ -3062,7 +3078,7 @@
           <!-- Insights Grid: Strengths & Growth Areas -->
           <div class="report-insights-grid">
             <div class="report-section" style="border-left: 4px solid var(--success);">
-              <div class="section-title-row" style="color: var(--success);">
+              <div class="section-title-row title-success">
                 <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Key Technical Strengths
               </div>
@@ -3072,7 +3088,7 @@
             </div>
 
             <div class="report-section" style="border-left: 4px solid var(--warning);">
-              <div class="section-title-row" style="color: var(--warning);">
+              <div class="section-title-row title-warning">
                 <svg style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 Areas for Growth & Recommendations
               </div>
