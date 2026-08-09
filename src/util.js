@@ -5,61 +5,110 @@ export function parseJsonLoose(text) {
   try {
     return JSON.parse(cleaned);
   } catch (err) {
-    // Clean and escape literal newlines/control characters inside JSON strings
-    let processed = "";
-    let inString = false;
+    let repaired = cleaned;
+    
+    // Count quotes to check if we ended inside an unclosed string
+    let openQuotes = 0;
     let escape = false;
-    for (let i = 0; i < cleaned.length; i++) {
-      const char = cleaned[i];
-      if (char === '"' && !escape) {
-        inString = !inString;
-        processed += char;
-      } else if (char === '\\' && inString) {
+    for (let i = 0; i < repaired.length; i++) {
+      if (repaired[i] === '\\') {
         escape = !escape;
-        processed += char;
+      } else if (repaired[i] === '"' && !escape) {
+        openQuotes++;
+        escape = false;
       } else {
         escape = false;
-        if (inString && char === '\n') {
-          processed += '\\n';
-        } else if (inString && char === '\r') {
-          processed += '\\r';
-        } else {
-          processed += char;
+      }
+    }
+    
+    if (openQuotes % 2 !== 0) {
+      repaired += '"';
+    }
+    
+    // Balance braces and brackets
+    let openBraces = 0;
+    let openBrackets = 0;
+    let inString = false;
+    escape = false;
+    
+    for (let i = 0; i < repaired.length; i++) {
+      const char = repaired[i];
+      if (char === '\\') {
+        escape = !escape;
+      } else if (char === '"' && !escape) {
+        inString = !inString;
+        escape = false;
+      } else {
+        escape = false;
+        if (!inString) {
+          if (char === '{') openBraces++;
+          else if (char === '}') openBraces--;
+          else if (char === '[') openBrackets++;
+          else if (char === ']') openBrackets--;
         }
       }
     }
-
+    
+    while (openBrackets > 0) {
+      repaired += ']';
+      openBrackets--;
+    }
+    while (openBraces > 0) {
+      repaired += '}';
+      openBraces--;
+    }
+    
+    // Clean up trailing key/property name without value
+    repaired = repaired.replace(/,\s*"[^"]*"\s*([}\]])/g, '$1');
+    
+    // Clean up trailing commas before closing braces/brackets
+    repaired = repaired.replace(/,\s*([}\]])/g, '$1');
+    
     try {
-      return JSON.parse(processed);
+      return JSON.parse(repaired);
     } catch (err2) {
-      // Last resort: grab the first {...} block in the text.
-      const match = processed.match(/\{[\s\S]*\}/);
+      const match = cleaned.match(/\{[\s\S]*/);
       if (match) {
-        let repaired = match[0].trim();
+        let block = match[0].trim();
+        let blockQuotes = 0;
+        let esc = false;
+        for (let i = 0; i < block.length; i++) {
+          if (block[i] === '\\') esc = !esc;
+          else if (block[i] === '"' && !esc) { blockQuotes++; esc = false; }
+          else esc = false;
+        }
+        if (blockQuotes % 2 !== 0) block += '"';
+        
+        let braces = 0;
+        let brackets = 0;
+        let str = false;
+        let es = false;
+        for (let i = 0; i < block.length; i++) {
+          const c = block[i];
+          if (c === '\\') es = !es;
+          else if (c === '"' && !es) { str = !str; es = false; }
+          else {
+            es = false;
+            if (!str) {
+              if (c === '{') braces++;
+              else if (c === '}') braces--;
+              else if (c === '[') brackets++;
+              else if (c === ']') brackets--;
+            }
+          }
+        }
+        while (brackets > 0) { block += ']'; brackets--; }
+        while (braces > 0) { block += '}'; braces--; }
+        
+        // Clean up trailing key/property name without value
+        block = block.replace(/,\s*"[^"]*"\s*([}\]])/g, '$1');
+        
+        block = block.replace(/,\s*([}\]])/g, '$1');
+        
         try {
-          return JSON.parse(repaired);
+          return JSON.parse(block);
         } catch (err3) {
-          // Attempt to repair truncation by appending closing quotes and braces
-          // Let's check if the last character is not a closing brace
-          if (!repaired.endsWith("}")) {
-            // If we were inside a string when it truncated, close the string
-            if (inString) {
-              repaired += '"';
-            }
-            // Count open vs close braces
-            const openBraces = (repaired.match(/\{/g) || []).length;
-            const closeBraces = (repaired.match(/\}/g) || []).length;
-            let diff = openBraces - closeBraces;
-            while (diff > 0) {
-              repaired += "}";
-              diff--;
-            }
-          }
-          try {
-            return JSON.parse(repaired);
-          } catch (err4) {
-            throw err2;
-          }
+          throw err;
         }
       }
       throw err;

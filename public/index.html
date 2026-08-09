@@ -1411,8 +1411,8 @@
       <button id="nav-landing" class="nav-btn active" onclick="showLandingScreen()">Overview</button>
       <button id="nav-dashboard" class="nav-btn" onclick="showDashboardScreen()">Executive Dashboard</button>
       <button id="nav-selection" class="nav-btn" onclick="showSelectionScreen()">Candidate Hub</button>
-      <button id="nav-interview" class="nav-btn" disabled onclick="showInterviewScreen()">Interview Workspace</button>
-      <button id="nav-report" class="nav-btn" disabled onclick="showFeedbackScreen()">Assessment Report</button>
+      <button id="nav-interview" class="nav-btn" onclick="showInterviewScreen()">Interview Workspace</button>
+      <button id="nav-report" class="nav-btn" onclick="showFeedbackScreen()">Assessment Report</button>
     </nav>
     <div class="status-badge">
       <span class="status-dot"></span>
@@ -1846,6 +1846,7 @@
     let currentSessionId = null;
     let localPlan = [];
     let activePlanIndex = 0;
+    let hasGeneratedReport = false;
 
     // Simulated candidate test responses
     const SAMPLE_ANSWERS = [
@@ -1857,15 +1858,15 @@
 
     // Initialize UI elements
     window.addEventListener('DOMContentLoaded', () => {
-      // Set initial history state for the candidate selection screen
-      history.replaceState({ screen: 'selection' }, '');
+      // Set initial history state for the Overview landing screen
+      history.replaceState({ screen: 'landing' }, '');
 
       // Catch browser Back/Forward navigation
       window.addEventListener('popstate', (e) => {
         if (e.state && e.state.screen) {
           navigateScreen(e.state.screen);
         } else {
-          navigateScreen('selection');
+          navigateScreen('landing');
         }
       });
 
@@ -2526,14 +2527,25 @@
     }
 
     function showInterviewScreen() {
-      if (selectedCandidate) pushNavigation('interview');
+      if (selectedCandidate) {
+        pushNavigation('interview');
+      } else {
+        alert("No active interview session. Please select a candidate and click 'Launch Interview' in the Candidate Hub first.");
+        pushNavigation('selection');
+      }
     }
 
     function showFeedbackScreen() {
-      pushNavigation('feedback');
+      if (hasGeneratedReport) {
+        pushNavigation('feedback');
+      } else {
+        alert("No assessment report has been generated yet. Please complete an interview first.");
+        pushNavigation('selection');
+      }
     }
 
     function renderFeedbackReport(feedback, stats) {
+      hasGeneratedReport = true;
       const container = document.getElementById('feedback-screen');
       if (!container) return;
 
