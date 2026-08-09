@@ -1412,9 +1412,12 @@
     /* TEMPORARY LIGHT THEME FOR PDF EXPORT ONLY (.export-light-theme) */
     .feedback-container.export-light-theme {
       background: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
+      border: 1px solid #cbd5e1 !important;
       color: #0f172a !important;
       box-shadow: none !important;
+      max-width: 100% !important;
+      padding: 2rem !important;
+      gap: 1.5rem !important;
     }
     .feedback-container.export-light-theme .report-actions,
     .feedback-container.export-light-theme .report-footer-actions {
@@ -1436,16 +1439,21 @@
     .feedback-container.export-light-theme .audit-key,
     .feedback-container.export-light-theme .kpi-header,
     .feedback-container.export-light-theme .score-hero-subtitle {
-      color: #64748b !important;
+      color: #475569 !important;
     }
     .feedback-container.export-light-theme .topic-card-explanation,
-    .feedback-container.export-light-theme .insight-item {
+    .feedback-container.export-light-theme .insight-item,
+    .feedback-container.export-light-theme .cell-explanation {
       color: #334155 !important;
     }
-    .feedback-container.export-light-theme .exec-summary-text {
-      background: #eff6ff !important;
-      color: #1e293b !important;
-      border-left-color: #2563eb !important;
+    .feedback-container.export-light-theme .report-doc-tag {
+      color: #2563eb !important;
+    }
+    .feedback-container.export-light-theme .gauge-fill {
+      stroke: #2563eb !important;
+    }
+    .feedback-container.export-light-theme .gauge-bg {
+      stroke: #e2e8f0 !important;
     }
     .feedback-container.export-light-theme .report-section,
     .feedback-container.export-light-theme .kpi-card,
@@ -1453,26 +1461,30 @@
     .feedback-container.export-light-theme .report-candidate-strip,
     .feedback-container.export-light-theme .audit-grid {
       background: #f8fafc !important;
-      border: 1px solid #e2e8f0 !important;
+      border: 1px solid #cbd5e1 !important;
       color: #0f172a !important;
+      box-shadow: none !important;
     }
     .feedback-container.export-light-theme .report-score-hero {
       background: #f8fafc !important;
-      border: 1px solid #e2e8f0 !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: none !important;
     }
-    .feedback-container.export-light-theme .gauge-bg {
-      stroke: #e2e8f0 !important;
+    .feedback-container.export-light-theme .exec-summary-text {
+      background: #eff6ff !important;
+      color: #1e293b !important;
+      border-left: 4px solid #2563eb !important;
     }
     .feedback-container.export-light-theme .topic-progress-bg {
       background: #e2e8f0 !important;
     }
     .feedback-container.export-light-theme .audit-table {
-      border-color: #e2e8f0 !important;
+      border-color: #cbd5e1 !important;
     }
     .feedback-container.export-light-theme .audit-table th {
       background: #f1f5f9 !important;
       color: #475569 !important;
-      border-bottom-color: #e2e8f0 !important;
+      border-bottom-color: #cbd5e1 !important;
     }
     .feedback-container.export-light-theme .audit-table td {
       border-bottom-color: #f1f5f9 !important;
@@ -1502,7 +1514,7 @@
         print-color-adjust: exact;
         -webkit-print-color-adjust: exact;
       }
-      header, footer, .report-actions, .report-footer-actions, nav,
+      header, footer, nav,
       #selection-screen, #verification-screen,
       #interview-screen, #landing-screen,
       #create-candidate-screen, #dashboard-screen {
@@ -1515,42 +1527,106 @@
       }
       #feedback-screen { display: block !important; }
       .feedback-container {
-        box-shadow: none !important;
-        border: none !important;
         background: #ffffff !important;
-        padding: 0 !important;
-        max-width: 100% !important;
-        gap: 1.25rem !important;
-      }
-      .report-section, .kpi-card, .topic-breakdown-card, .report-candidate-strip, .audit-grid {
-        background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
+        border: 1px solid #cbd5e1 !important;
         color: #0f172a !important;
+        box-shadow: none !important;
+        max-width: 100% !important;
+        padding: 2rem !important;
+        gap: 1.5rem !important;
+      }
+      .report-actions,
+      .report-footer-actions {
+        display: none !important;
+      }
+      .report-doc-title,
+      .section-title-row,
+      .topic-card-name,
+      .kpi-value,
+      .strip-value,
+      .audit-val,
+      .score-hero-title,
+      .gauge-text {
+        color: #0f172a !important;
+      }
+      .report-doc-sub,
+      .strip-label,
+      .kpi-subtext,
+      .audit-key,
+      .kpi-header,
+      .score-hero-subtitle {
+        color: #475569 !important;
+      }
+      .topic-card-explanation,
+      .insight-item,
+      .cell-explanation {
+        color: #334155 !important;
+      }
+      .report-doc-tag {
+        color: #2563eb !important;
+      }
+      .gauge-fill {
+        stroke: #2563eb !important;
+      }
+      .gauge-bg {
+        stroke: #e2e8f0 !important;
+      }
+      .report-section,
+      .kpi-card,
+      .topic-breakdown-card,
+      .report-candidate-strip,
+      .audit-grid {
+        background: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+        box-shadow: none !important;
         page-break-inside: avoid;
       }
       .report-score-hero {
         background: #f8fafc !important;
-        border: 1px solid #e2e8f0 !important;
+        border: 1px solid #cbd5e1 !important;
+        box-shadow: none !important;
         page-break-inside: avoid;
       }
-      .report-kpi-grid { page-break-inside: avoid; }
-      .report-insights-grid { page-break-inside: avoid; }
-      .report-doc-title, .topic-card-name, .section-title-row, .kpi-value, .strip-value, .audit-val, .score-hero-title, .gauge-text {
+      .exec-summary-text {
+        background: #eff6ff !important;
+        color: #1e293b !important;
+        border-left: 4px solid #2563eb !important;
+      }
+      .topic-progress-bg {
+        background: #e2e8f0 !important;
+      }
+      .audit-table {
+        border-color: #cbd5e1 !important;
+        page-break-inside: avoid;
+      }
+      .audit-table th {
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+        border-bottom-color: #cbd5e1 !important;
+      }
+      .audit-table td {
+        border-bottom-color: #f1f5f9 !important;
+      }
+      .audit-table .cell-topic {
         color: #0f172a !important;
       }
-      .topic-card-explanation, .exec-summary-text, .insight-item, .report-doc-sub, .strip-label, .kpi-subtext, .audit-key, .score-hero-subtitle, .msg-meta {
-        color: #475569 !important;
+      .audit-table .cell-concept {
+        color: #b45309 !important;
       }
-      .report-doc-tag { color: #2563eb !important; }
-      .exec-summary-text { border-left-color: #2563eb !important; background: #eff6ff !important; }
-      .section-title-row.title-success { color: #166534 !important; }
-      .section-title-row.title-warning { color: #b45309 !important; }
-      .audit-table { border-color: #e2e8f0 !important; page-break-inside: avoid; }
-      .audit-table th { background: #f1f5f9 !important; color: #475569 !important; border-bottom-color: #e2e8f0 !important; }
-      .audit-table td { border-bottom-color: #f1f5f9 !important; }
-      .audit-table .cell-topic { color: #0f172a !important; }
-      .audit-table .cell-concept { color: #b45309 !important; }
-      .audit-table .cell-explanation { color: #334155 !important; }
+      .audit-table .cell-explanation {
+        color: #334155 !important;
+      }
+      .section-title-row.title-success {
+        color: #166534 !important;
+      }
+      .section-title-row.title-warning {
+        color: #b45309 !important;
+      }
+      .report-kpi-grid,
+      .report-insights-grid {
+        page-break-inside: avoid;
+      }
     }
   </style>
 </head>
