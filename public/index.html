@@ -1358,6 +1358,54 @@
       font-weight: 600;
     }
 
+    /* Audit Table Styling for Remediation Log */
+    .audit-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
+      font-size: 0.88rem;
+    }
+
+    .audit-table th {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .audit-table td {
+      padding: 0.85rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: top;
+    }
+
+    .audit-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .audit-table .cell-topic {
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .audit-table .cell-concept {
+      font-weight: 600;
+      color: var(--warning);
+    }
+
+    .audit-table .cell-explanation {
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
     /* TEMPORARY LIGHT THEME FOR PDF EXPORT ONLY (.export-light-theme) */
     .feedback-container.export-light-theme {
       background: #ffffff !important;
@@ -1415,6 +1463,26 @@
     .feedback-container.export-light-theme .topic-progress-bg {
       background: #e2e8f0 !important;
     }
+    .feedback-container.export-light-theme .audit-table {
+      border-color: #e2e8f0 !important;
+    }
+    .feedback-container.export-light-theme .audit-table th {
+      background: #f1f5f9 !important;
+      color: #475569 !important;
+      border-bottom-color: #e2e8f0 !important;
+    }
+    .feedback-container.export-light-theme .audit-table td {
+      border-bottom-color: #f1f5f9 !important;
+    }
+    .feedback-container.export-light-theme .audit-table .cell-topic {
+      color: #0f172a !important;
+    }
+    .feedback-container.export-light-theme .audit-table .cell-concept {
+      color: #b45309 !important;
+    }
+    .feedback-container.export-light-theme .audit-table .cell-explanation {
+      color: #334155 !important;
+    }
 
     /* Print / PDF Native Print Styles */
     @media print {
@@ -1466,6 +1534,12 @@
       }
       .report-doc-tag { color: #2563eb !important; }
       .exec-summary-text { border-left-color: #2563eb !important; background: #eff6ff !important; }
+      .audit-table { border-color: #e2e8f0 !important; page-break-inside: avoid; }
+      .audit-table th { background: #f1f5f9 !important; color: #475569 !important; border-bottom-color: #e2e8f0 !important; }
+      .audit-table td { border-bottom-color: #f1f5f9 !important; }
+      .audit-table .cell-topic { color: #0f172a !important; }
+      .audit-table .cell-concept { color: #b45309 !important; }
+      .audit-table .cell-explanation { color: #334155 !important; }
     }
   </style>
 </head>
@@ -2678,6 +2752,12 @@
           .report-doc-tag { color: #2563eb !important; }
           .gauge-fill { stroke: #2563eb !important; }
           .exec-summary-text { background: #eff6ff !important; border-left-color: #2563eb !important; }
+          .audit-table { border-color: #e2e8f0 !important; page-break-inside: avoid; }
+          .audit-table th { background: #f1f5f9 !important; color: #475569 !important; border-bottom-color: #e2e8f0 !important; }
+          .audit-table td { border-bottom-color: #f1f5f9 !important; }
+          .audit-table .cell-topic { color: #0f172a !important; }
+          .audit-table .cell-concept { color: #b45309 !important; }
+          .audit-table .cell-explanation { color: #334155 !important; }
         }
       `;
       document.head.appendChild(printStyle);
@@ -2948,17 +3028,17 @@
                   <table class="audit-table">
                     <thead>
                       <tr>
-                        <th>Topic</th>
-                        <th>Missed / Misconstrued Concept</th>
-                        <th>In-Flight Remediation Explanation</th>
+                        <th style="width: 22%;">Topic</th>
+                        <th style="width: 28%;">Missed / Misconstrued Concept</th>
+                        <th style="width: 50%;">In-Flight Remediation Explanation</th>
                       </tr>
                     </thead>
                     <tbody>
                       ${missed.map(mc => `
                         <tr>
-                          <td style="font-weight: 600; color: #fff;">${mc.topic || 'General'}</td>
-                          <td style="color: var(--warning); font-weight: 600;">${mc.concept || 'Knowledge Gap'}</td>
-                          <td style="color: var(--text-muted); line-height: 1.4;">${mc.explanation || 'Remediation explanation provided during turn'}</td>
+                          <td class="cell-topic">${mc.topic || 'General'}</td>
+                          <td class="cell-concept">${mc.concept || 'Knowledge Gap'}</td>
+                          <td class="cell-explanation">${mc.explanation || 'Remediation explanation provided during turn'}</td>
                         </tr>
                       `).join('')}
                     </tbody>
