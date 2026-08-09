@@ -5,6 +5,30 @@ import { INITIAL_DIFFICULTY, nextDifficulty } from "./difficultyEngine.js";
 import { classifyDuration, timingLabel } from "./timingTracker.js";
 import { parseJsonLoose } from "./util.js";
 
+export function isDontKnow(message) {
+  if (!message) return false;
+  const msg = message.toLowerCase().trim().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g,"");
+  const phrases = [
+    "i dont know",
+    "i dont know this",
+    "i have no idea",
+    "im not sure",
+    "i cant answer that",
+    "i dont remember",
+    "no idea",
+    "i havent learned this",
+    "dont know",
+    "not sure",
+    "no clue",
+    "cant remember",
+    "i do not know",
+    "i do not know this",
+    "i can not answer that",
+    "i have not learned this"
+  ];
+  return phrases.some(p => msg === p || msg.includes(p));
+}
+
 export function calculateSessionStats(session) {
   const plan = session.plan || [];
   const transcript = session.transcript || [];
@@ -130,9 +154,29 @@ export async function handleTurn(session, candidateMessage, answerDurationMs) {
     : null;
   analysis.timing = timing;
 
+  // Safeguard Override for "I don't know" / DOES_NOT_KNOW answers
+  if (isDontKnow(candidateMessage)) {
+    analysis.correctness = "Incorrect";
+    analysis.responseClassification = "DOES_NOT_KNOW";
+    analysis.updatedWeaknessScore = 5;
+    
+    // Check if the LLM generated a follow-up by mistake
+    const qLower = (decision.question || "").toLowerCase();
+    if (qLower.includes("expand") || qLower.includes("applied") || qLower.includes("detail") || qLower.includes("dive deeper") || qLower.includes("how did you")) {
+      const nextTopic = plan[currentIndex + 1];
+      if (nextTopic) {
+        decision.decision = "Next topic transition";
+        decision.question = `Let's move to the next area: ${nextTopic.title}. Can you explain your experience with this?`;
+      } else {
+        decision.decision = "Interview completion";
+        decision.question = `Thank you, ${candidate.member?.name || 'Candidate'}. Those were all the questions I had for today.`;
+      }
+    }
+  }
+
   if (analysis) {
-    if (typeof analysis.updatedWeaknessScore === 'number') {
-      currentTopic.weaknessScore = Math.max(1, Math.min(5, analysis.updatedWeaknessScore));
+    if (typeof analysis.updatedWeaknessScore === 'number' || isDontKnow(candidateMessage)) {
+      currentTopic.weaknessScore = isDontKnow(candidateMessage) ? 5 : Math.max(1, Math.min(5, analysis.updatedWeaknessScore));
     } else {
       if (analysis.correctness === "Correct") {
         currentTopic.weaknessScore = Math.max(1, currentTopic.weaknessScore - 1);

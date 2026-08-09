@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getSession, createSession, updateSession } from "./store.js";
 import { startInterview, handleTurn, forceConcludeInterview, calculateSessionStats } from "./interviewEngine.js";
-import { readFileSync } from "fs";
+import { readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -14,6 +14,74 @@ const router = Router();
 
 router.get("/candidates", (req, res) => {
   res.json(candidatesData);
+});
+
+router.post("/candidates", (req, res) => {
+  const { name, jobRole, yearsExperience, education, skills, projects, resumeInfo } = req.body || {};
+  if (!name || !jobRole) {
+    return res.status(400).json({ error: "Candidate Name and Target Role are required" });
+  }
+
+  // Generate Candidate ID CAND-XXX
+  const maxNum = candidatesData.reduce((max, c) => {
+    const match = c.member?.id?.match(/CAND-(\d+)/);
+    if (match) {
+      const num = parseInt(match[1], 10);
+      return num > max ? num : max;
+    }
+    return max;
+  }, 0);
+  const nextId = `CAND-${String(maxNum + 1).padStart(3, '0')}`;
+
+  // Generate Session ID
+  const randNum = Math.floor(10000 + Math.random() * 90000);
+  const nextSessionId = `IGNIS-INT-${randNum}`;
+
+  const skillsArr = Array.isArray(skills) ? skills : (skills ? skills.split(',').map(s => s.trim()).filter(Boolean) : []);
+  const projectsArr = Array.isArray(projects) ? projects : (projects ? projects.split(',').map(p => p.trim()).filter(Boolean) : []);
+
+  const newCandidate = {
+    member: {
+      id: nextId,
+      name,
+      jobRole,
+      yearsExperience: Number(yearsExperience) || 0,
+      education: education || "",
+      status: "COMPLETED"
+    },
+    sessionId: nextSessionId,
+    missions: [
+      { "day": 7, "title": "Embeddings Explained", "passed": true, "attempts": 1 },
+      { "day": 8, "title": "Vector Databases Overview", "passed": true, "attempts": 1 },
+      { "day": 10, "title": "Retrieval & Matching Engine", "passed": true, "attempts": 1 },
+      { "day": 12, "title": "Prompt Engineering Fundamentals", "passed": true, "attempts": 1 },
+      { "day": 16, "title": "Chatbot Backend & API Integration", "passed": true, "attempts": 1 },
+      { "day": 22, "title": "Multi-Agent Orchestration", "passed": true, "attempts": 1 },
+      { "day": 23, "title": "Model Context Protocol (MCP)", "passed": true, "attempts": 1 },
+      { "day": 28, "title": "Docker & Kubernetes Deployment", "passed": true, "attempts": 1 },
+      { "day": 29, "title": "Monitoring, Logging & Observability", "passed": true, "attempts": 1 },
+      { "day": 31, "title": "Capstone Project & Final Demo", "passed": true, "attempts": 1 }
+    ],
+    signals: {
+      commitDays: 20,
+      missionsCompleted: 10,
+      missionsFirstTry: 10
+    },
+    skills: skillsArr,
+    projects: projectsArr,
+    resumeInfo: resumeInfo || ""
+  };
+
+  candidatesData.push(newCandidate);
+
+  try {
+    const filePath = path.join(__dirname, "..", "data", "candidates.json");
+    writeFileSync(filePath, JSON.stringify({ candidates: candidatesData }, null, 2), "utf-8");
+  } catch (err) {
+    console.error("Failed to persist new candidate:", err);
+  }
+
+  res.json(newCandidate);
 });
 
 // POST /api/interview
