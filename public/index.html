@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- html2pdf.js for local PDF download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <style>
     :root {
       --bg-main: #060913;
@@ -910,7 +912,7 @@
       text-align: right;
     }
 
-    /* Executive Assessment Report Layout */
+    /* Executive Assessment Report Layout (Dark Theme for On-Screen View) */
     .feedback-container {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -921,6 +923,7 @@
       display: flex;
       flex-direction: column;
       gap: 2rem;
+      color: var(--text-main);
       backdrop-filter: blur(16px);
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(59, 130, 246, 0.05);
     }
@@ -1218,9 +1221,8 @@
       line-height: 1.7;
       color: #e2e8f0;
       border-left: 3px solid var(--primary);
-      padding-left: 1.25rem;
-      background: rgba(59, 130, 246, 0.03);
       padding: 1rem 1.25rem;
+      background: rgba(59, 130, 246, 0.03);
       border-radius: 0 0.5rem 0.5rem 0;
     }
 
@@ -1356,49 +1358,114 @@
       font-weight: 600;
     }
 
-    /* Print Styles */
+    /* TEMPORARY LIGHT THEME FOR PDF EXPORT ONLY (.export-light-theme) */
+    .feedback-container.export-light-theme {
+      background: #ffffff !important;
+      border: 1px solid #e2e8f0 !important;
+      color: #0f172a !important;
+      box-shadow: none !important;
+    }
+    .feedback-container.export-light-theme .report-actions,
+    .feedback-container.export-light-theme .report-footer-actions {
+      display: none !important;
+    }
+    .feedback-container.export-light-theme .report-doc-title,
+    .feedback-container.export-light-theme .section-title-row,
+    .feedback-container.export-light-theme .topic-card-name,
+    .feedback-container.export-light-theme .kpi-value,
+    .feedback-container.export-light-theme .strip-value,
+    .feedback-container.export-light-theme .audit-val,
+    .feedback-container.export-light-theme .score-hero-title,
+    .feedback-container.export-light-theme .gauge-text {
+      color: #0f172a !important;
+    }
+    .feedback-container.export-light-theme .report-doc-sub,
+    .feedback-container.export-light-theme .strip-label,
+    .feedback-container.export-light-theme .kpi-subtext,
+    .feedback-container.export-light-theme .audit-key,
+    .feedback-container.export-light-theme .kpi-header,
+    .feedback-container.export-light-theme .score-hero-subtitle {
+      color: #64748b !important;
+    }
+    .feedback-container.export-light-theme .topic-card-explanation,
+    .feedback-container.export-light-theme .insight-item {
+      color: #334155 !important;
+    }
+    .feedback-container.export-light-theme .exec-summary-text {
+      background: #eff6ff !important;
+      color: #1e293b !important;
+      border-left-color: #2563eb !important;
+    }
+    .feedback-container.export-light-theme .report-section,
+    .feedback-container.export-light-theme .kpi-card,
+    .feedback-container.export-light-theme .topic-breakdown-card,
+    .feedback-container.export-light-theme .report-candidate-strip,
+    .feedback-container.export-light-theme .audit-grid {
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    .feedback-container.export-light-theme .report-score-hero {
+      background: #f8fafc !important;
+      border: 1px solid #e2e8f0 !important;
+    }
+    .feedback-container.export-light-theme .gauge-bg {
+      stroke: #e2e8f0 !important;
+    }
+    .feedback-container.export-light-theme .topic-progress-bg {
+      background: #e2e8f0 !important;
+    }
+
+    /* Print / PDF Native Print Styles */
     @media print {
+      @page { size: A4; margin: 1.5cm; }
       body {
-        background: #fff !important;
-        color: #000 !important;
+        background: #ffffff !important;
+        color: #0f172a !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
       }
-      header, footer, .report-actions, #selection-screen, #verification-screen, #interview-screen {
+      header, footer, .report-actions, .report-footer-actions, nav,
+      #selection-screen, #verification-screen,
+      #interview-screen, #landing-screen,
+      #create-candidate-screen, #dashboard-screen {
         display: none !important;
       }
+      main {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      #feedback-screen { display: block !important; }
       .feedback-container {
         box-shadow: none !important;
         border: none !important;
-        background: #fff !important;
-        color: #000 !important;
+        background: #ffffff !important;
         padding: 0 !important;
         max-width: 100% !important;
+        gap: 1.25rem !important;
       }
       .report-section, .kpi-card, .topic-breakdown-card, .report-candidate-strip, .audit-grid {
         background: #f8fafc !important;
         border: 1px solid #e2e8f0 !important;
         color: #0f172a !important;
+        page-break-inside: avoid;
       }
-      .report-doc-title, .topic-card-name, .section-title-row, .kpi-value, .strip-value, .audit-val {
+      .report-score-hero {
+        background: #f8fafc !important;
+        border: 1px solid #e2e8f0 !important;
+        page-break-inside: avoid;
+      }
+      .report-kpi-grid { page-break-inside: avoid; }
+      .report-insights-grid { page-break-inside: avoid; }
+      .report-doc-title, .topic-card-name, .section-title-row, .kpi-value, .strip-value, .audit-val, .score-hero-title, .gauge-text {
         color: #0f172a !important;
       }
-      .topic-card-explanation, .exec-summary-text, .insight-item, .report-doc-sub, .strip-label, .kpi-subtext, .audit-key {
-        color: #334155 !important;
+      .topic-card-explanation, .exec-summary-text, .insight-item, .report-doc-sub, .strip-label, .kpi-subtext, .audit-key, .score-hero-subtitle, .msg-meta {
+        color: #475569 !important;
       }
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      backdrop-filter: blur(5px);
-    }
-    .modal-close-btn:hover {
-      color: #fff !important;
+      .report-doc-tag { color: #2563eb !important; }
+      .exec-summary-text { border-left-color: #2563eb !important; background: #eff6ff !important; }
     }
   </style>
 </head>
@@ -1424,7 +1491,6 @@
     </a>
     <nav class="nav-links">
       <button id="nav-landing" class="nav-btn active" onclick="showLandingScreen()">Overview</button>
-      <button id="nav-dashboard" class="nav-btn" onclick="showDashboardScreen()">Executive Dashboard</button>
       <button id="nav-selection" class="nav-btn" onclick="showSelectionScreen()">Candidate Hub</button>
       <button id="nav-interview" class="nav-btn" onclick="showInterviewScreen()">Interview Workspace</button>
       <button id="nav-report" class="nav-btn" onclick="showFeedbackScreen()">Assessment Report</button>
@@ -1450,13 +1516,13 @@
           Role-calibrated, real-time technical assessments powered by dynamic question framing, in-flight educational concept remediation, and automated executive competency auditing.
         </p>
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-          <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, var(--primary), #8b5cf6); border: none; padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; box-shadow: 0 0 25px var(--primary-glow); transition: transform 0.2s;" onclick="showDashboardScreen()">
-            <svg style="width: 1.2rem; height: 1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-            Open Executive Dashboard
-          </button>
-          <button class="btn btn-secondary btn-lg" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; transition: all 0.2s;" onclick="showSelectionScreen()">
+          <button class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, var(--primary), #8b5cf6); border: none; padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; box-shadow: 0 0 25px var(--primary-glow); transition: transform 0.2s;" onclick="showSelectionScreen()">
             <svg style="width: 1.2rem; height: 1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
             Candidate Assessment Hub
+          </button>
+          <button class="btn btn-secondary btn-lg" style="background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); padding: 0.85rem 2rem; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; color: #fff; display: inline-flex; align-items: center; gap: 0.6rem; transition: all 0.2s;" onclick="showCreateCandidateScreen()">
+            <svg style="width: 1.2rem; height: 1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Launch New Candidate
           </button>
         </div>
       </div>
@@ -1497,120 +1563,20 @@
       </div>
     </div>
 
-    <!-- Screen 0.5: Executive Dashboard -->
-    <div id="dashboard-screen" class="screen">
-      <div class="hero-banner" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
-          <div>
-            <h1>Executive Assessment Analytics</h1>
-            <p class="hero-tagline" style="color: var(--primary); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.25rem; font-family: var(--font-display);">Cohort Level Intelligence & Telemetry</p>
-            <p>Real-time technical metrics, score distributions, and recent candidate assessment evaluations.</p>
-          </div>
-          <button class="btn btn-primary" onclick="showCreateCandidateScreen()" style="padding: 0.75rem 1.5rem; font-weight: 700; border-radius: 8px; cursor: pointer;">
-            Launch New Candidate Assessment
-          </button>
-        </div>
-      </div>
-
-      <!-- Cohort Summary Stats -->
-      <div class="dashboard-stats" style="margin-bottom: 2rem;">
-        <div class="stat-card">
-          <div class="stat-icon-wrapper">
-            <svg style="width: 1.25rem; height: 1.25rem; color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-number">24</span>
-            <span class="stat-label">Active Candidates</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon-wrapper">
-            <svg style="width: 1.25rem; height: 1.25rem; color: var(--success);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-number">84%</span>
-            <span class="stat-label">Cohort Pass Rate</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon-wrapper">
-            <svg style="width: 1.25rem; height: 1.25rem; color: var(--warning);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-number">82 / 100</span>
-            <span class="stat-label">Avg Technical Depth Score</span>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon-wrapper">
-            <svg style="width: 1.25rem; height: 1.25rem; color: #8b5cf6;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-          </div>
-          <div class="stat-info">
-            <span class="stat-number">96%</span>
-            <span class="stat-label">Remediation Accuracy</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Assessments Log Table -->
-      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem; margin-bottom: 2rem;">
-        <h3 style="font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          <svg style="width: 1.25rem; height: 1.25rem; color: var(--primary);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
-          <span>Recent Candidate Assessment History</span>
-        </h3>
-        
-        <div style="overflow-x: auto;">
-          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
-            <thead>
-              <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em;">
-                <th style="padding: 0.75rem 1rem;">Candidate Name</th>
-                <th style="padding: 0.75rem 1rem;">Target Role</th>
-                <th style="padding: 0.75rem 1rem;">Experience</th>
-                <th style="padding: 0.75rem 1rem;">Overall Score</th>
-                <th style="padding: 0.75rem 1rem;">Hiring Recommendation</th>
-                <th style="padding: 0.75rem 1rem; text-align: right;">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 1rem; font-weight: 600; color: #fff;">Aarav Sharma</td>
-                <td style="padding: 1rem; color: var(--text-muted);">AI / ML Engineer</td>
-                <td style="padding: 1rem; color: var(--text-muted);">4.5 Years</td>
-                <td style="padding: 1rem; font-weight: 700; color: var(--success);">85 / 100</td>
-                <td style="padding: 1rem;"><span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">RECOMMENDED</span></td>
-                <td style="padding: 1rem; text-align: right;"><button onclick="showSelectionScreen(); setTimeout(() => selectCandidate('CAND-021'), 150);" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer;">View Profile</button></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 1rem; font-weight: 600; color: #fff;">Diya Patel</td>
-                <td style="padding: 1rem; color: var(--text-muted);">Senior Data Architect</td>
-                <td style="padding: 1rem; color: var(--text-muted);">8.0 Years</td>
-                <td style="padding: 1rem; font-weight: 700; color: var(--success);">92 / 100</td>
-                <td style="padding: 1rem;"><span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: var(--success); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">RECOMMENDED</span></td>
-                <td style="padding: 1rem; text-align: right;"><button onclick="showSelectionScreen(); setTimeout(() => selectCandidate('CAND-022'), 150);" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer;">View Profile</button></td>
-              </tr>
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 1rem; font-weight: 600; color: #fff;">Rohan Mehta</td>
-                <td style="padding: 1rem; color: var(--text-muted);">DevOps & MLOps Engineer</td>
-                <td style="padding: 1rem; color: var(--text-muted);">3.0 Years</td>
-                <td style="padding: 1rem; font-weight: 700; color: var(--warning);">68 / 100</td>
-                <td style="padding: 1rem;"><span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: var(--warning); font-size: 0.75rem; font-weight: 700; padding: 0.25rem 0.6rem; border-radius: 4px;">MAYBE RECOMMENDED</span></td>
-                <td style="padding: 1rem; text-align: right;"><button onclick="showSelectionScreen(); setTimeout(() => selectCandidate('CAND-023'), 150);" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); color: var(--primary); font-size: 0.8rem; font-weight: 600; padding: 0.35rem 0.85rem; border-radius: 6px; cursor: pointer;">View Profile</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <!-- Executive Dashboard removed -->
 
     <!-- Screen 1: Candidate Assessment Dashboard -->
     <div id="selection-screen" class="screen">
-      <div class="hero-banner">
-        <h1>Candidate Assessment Hub</h1>
-        <p class="hero-tagline" style="color: var(--primary); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; font-family: var(--font-display);">Built for the ABTalks AI Cohort</p>
-        <p>Conduct adaptive, curriculum-aware technical interviews with AI-powered reasoning, contextual evaluation, and intelligent candidate assessment.</p>
+      <div class="hero-banner" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 2rem;">
+        <div>
+          <h1>Candidate Assessment Hub</h1>
+          <p class="hero-tagline" style="color: var(--primary); font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; font-family: var(--font-display);">Built for the ABTalks AI Cohort</p>
+          <p>Conduct adaptive, curriculum-aware technical interviews with AI-powered reasoning, contextual evaluation, and intelligent candidate assessment.</p>
+        </div>
+        <button class="btn-primary" onclick="showCreateCandidateScreen()" style="display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.85rem 1.75rem; font-size: 0.95rem; font-weight: 700; border-radius: 10px; cursor: pointer; white-space: nowrap; flex-shrink: 0; box-shadow: 0 0 20px var(--primary-glow);">
+          <svg style="width: 1.1rem; height: 1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Launch New Candidate
+        </button>
       </div>
 
       <!-- Cohort Summary Stats -->
@@ -2522,9 +2488,29 @@
       stream.scrollTop = stream.scrollHeight;
     }
 
+    async function terminateInterviewEarly() {
+      if (!confirm('Are you sure you want to end this interview session early and generate the evaluation report?')) {
+        return;
+      }
+      showTyping(true);
+      try {
+        const response = await fetch('/api/interview', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ sessionId: currentSessionId, conclude: true })
+        });
+        if (!response.ok) throw new Error(await response.text());
+        const data = await response.json();
+        showTyping(false);
+        renderFeedbackReport(data.feedback, data.stats);
+      } catch (err) {
+        showTyping(false);
+        alert('Failed to conclude interview: ' + err.message);
+      }
+    }
+
     function navigateScreen(screenName) {
       document.getElementById('landing-screen')?.classList.remove('active');
-      document.getElementById('dashboard-screen')?.classList.remove('active');
       document.getElementById('selection-screen')?.classList.remove('active');
       document.getElementById('verification-screen')?.classList.remove('active');
       document.getElementById('interview-screen')?.classList.remove('active');
@@ -2539,14 +2525,12 @@
 
       const cleanName = screenName.replace('-screen', '');
       const navLanding = document.getElementById('nav-landing');
-      const navDashboard = document.getElementById('nav-dashboard');
       const navSelection = document.getElementById('nav-selection');
       const navInterview = document.getElementById('nav-interview');
       const navReport = document.getElementById('nav-report');
 
       if (navLanding) navLanding.classList.toggle('active', cleanName === 'landing');
-      if (navDashboard) navDashboard.classList.toggle('active', cleanName === 'dashboard' || cleanName === 'create-candidate');
-      if (navSelection) navSelection.classList.toggle('active', cleanName === 'selection');
+      if (navSelection) navSelection.classList.toggle('active', cleanName === 'selection' || cleanName === 'create-candidate' || cleanName === 'verification');
       if (navInterview) navInterview.classList.toggle('active', cleanName === 'interview');
       if (navReport) navReport.classList.toggle('active', cleanName === 'feedback' || cleanName === 'report');
     }
@@ -2643,7 +2627,8 @@
     }
 
     function showDashboardScreen() {
-      pushNavigation('dashboard');
+      // Executive Dashboard removed — redirect to Candidate Hub
+      pushNavigation('selection');
     }
 
     function showSelectionScreen() {
@@ -2666,6 +2651,81 @@
         alert("No assessment report has been generated yet. Please complete an interview first.");
         pushNavigation('selection');
       }
+    }
+
+    // Opens the browser's native print dialog (Print Report)
+    function printReport() {
+      const printStyle = document.createElement('style');
+      printStyle.id = 'pdf-print-override';
+      printStyle.textContent = `
+        @media print {
+          @page { size: A4; margin: 1.5cm; }
+          body { background: #ffffff !important; color: #0f172a !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+          header, footer, nav, .report-actions, .report-footer-actions,
+          #selection-screen, #verification-screen, #interview-screen,
+          #landing-screen, #create-candidate-screen { display: none !important; }
+          main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+          #feedback-screen { display: block !important; }
+          .feedback-container { box-shadow: none !important; background: #ffffff !important; max-width: 100% !important; padding: 0 !important; border: none !important; }
+          .report-section { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; page-break-inside: avoid; }
+          .kpi-card { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+          .topic-breakdown-card { background: #f1f5f9 !important; border: 1px solid #e2e8f0 !important; page-break-inside: avoid; }
+          .report-candidate-strip { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+          .audit-grid { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+          .report-score-hero { background: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+          .report-doc-title, .topic-card-name, .section-title-row, .kpi-value, .strip-value, .audit-val, .score-hero-title, .gauge-text { color: #0f172a !important; }
+          .topic-card-explanation, .exec-summary-text, .insight-item, .report-doc-sub, .strip-label, .kpi-subtext, .audit-key, .msg-meta, .score-hero-subtitle { color: #475569 !important; }
+          .report-doc-tag { color: #2563eb !important; }
+          .gauge-fill { stroke: #2563eb !important; }
+          .exec-summary-text { background: #eff6ff !important; border-left-color: #2563eb !important; }
+        }
+      `;
+      document.head.appendChild(printStyle);
+      window.print();
+      setTimeout(() => {
+        const el = document.getElementById('pdf-print-override');
+        if (el) el.remove();
+      }, 3000);
+    }
+
+    // Downloads the report as a real PDF file to the computer using html2pdf.js
+    function downloadReportAsPDF() {
+      const reportEl = document.querySelector('.feedback-container');
+      if (!reportEl) {
+        alert('Report not found. Please generate a report first.');
+        return;
+      }
+
+      // Build a filename from the candidate name
+      const candidateName = (selectedCandidate?.member?.name || 'Candidate').replace(/\s+/g, '-');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `IGNIS-AI-Report-${candidateName}-${dateStr}.pdf`;
+
+      // Show a brief loading indicator on the button
+      const btn = event?.currentTarget;
+      if (btn) { btn.textContent = 'Generating...'; btn.disabled = true; }
+
+      // Temporarily apply light theme class for PDF export
+      reportEl.classList.add('export-light-theme');
+
+      const opt = {
+        margin:      [10, 10, 10, 10],
+        filename:    filename,
+        image:       { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak:   { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+
+      html2pdf().set(opt).from(reportEl).save().then(() => {
+        reportEl.classList.remove('export-light-theme');
+        if (btn) { btn.textContent = 'Download PDF Report'; btn.disabled = false; }
+      }).catch(err => {
+        reportEl.classList.remove('export-light-theme');
+        console.error('PDF generation failed:', err);
+        if (btn) { btn.textContent = 'Download PDF Report'; btn.disabled = false; }
+        alert('PDF generation failed. Please use the Print button instead.');
+      });
     }
 
     function renderFeedbackReport(feedback, stats) {
@@ -2756,11 +2816,15 @@
               <div class="report-doc-sub">Adaptive Technical Assessment & Candidate Competency Audit</div>
             </div>
             <div class="report-actions">
-              <button class="btn-secondary" onclick="window.print()">
+              <button class="btn-secondary" onclick="printReport()" style="display: flex; align-items: center; gap: 0.4rem;">
                 <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                Print / Export PDF
+                Print Report
               </button>
-              <button class="btn-primary" onclick="showSelectionScreen()">
+              <button class="btn-primary" onclick="downloadReportAsPDF()" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35); display: flex; align-items: center; gap: 0.4rem;">
+                <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Download PDF
+              </button>
+              <button class="btn-secondary" onclick="showSelectionScreen()">
                 <svg style="width: 1rem; height: 1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 Candidate Hub
               </button>
@@ -2985,6 +3049,28 @@
               ` : ''}
             </div>
           </div>
+
+          <!-- Bottom Action Bar -->
+          <div class="report-footer-actions" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color); margin-top: 0.5rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+              <span style="font-size: 0.78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Assessment Complete</span>
+              <span style="font-size: 0.95rem; color: #fff; font-weight: 600;">${m.name} — ${m.jobRole}</span>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+              <button onclick="showSelectionScreen()" class="btn-secondary">
+                <svg style="width: 0.9rem; height: 0.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                Back to Hub
+              </button>
+              <button onclick="printReport()" class="btn-secondary">
+                <svg style="width: 0.9rem; height: 0.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                Print Report
+              </button>
+              <button onclick="downloadReportAsPDF()" class="btn-primary" style="background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+                <svg style="width: 0.9rem; height: 0.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Download PDF Report
+              </button>
+            </div>
+          </div>
         </div>
       `;
 
@@ -3098,7 +3184,7 @@
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 1.25rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 1.5rem; margin-top: 2rem;">
-          <button type="button" class="btn" onclick="showDashboardScreen()" style="background: transparent; border: 1px solid var(--border-color); color: #fff; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: var(--font-body); transition: all 0.2s;">Cancel</button>
+          <button type="button" class="btn" onclick="showSelectionScreen()" style="background: transparent; border: 1px solid var(--border-color); color: #fff; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: var(--font-body); transition: all 0.2s;">Cancel</button>
           <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 700; font-family: var(--font-body); transition: all 0.2s;">Create Candidate & Continue</button>
         </div>
       </form>
